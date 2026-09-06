@@ -77,6 +77,11 @@ function loadState() {
       const raw = fs.readFileSync(DATA_FILE, 'utf8');
       return JSON.parse(raw);
     }
+    const seedFile = path.join(__dirname, 'platform_data.json');
+    if (fs.existsSync(seedFile)) {
+      const raw = fs.readFileSync(seedFile, 'utf8');
+      return JSON.parse(raw);
+    }
   } catch (e) {
     console.warn('[State] Failed to load data.json, starting fresh:', e.message);
   }
@@ -124,7 +129,16 @@ app.use((req, res, next) => {
 });
 
 app.use(express.json({ limit: '1mb' }));
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(__dirname));
+
+app.get('/', (req, res) => {
+  const publicIndex = path.join(__dirname, 'public', 'index.html');
+  const rootIndex   = path.join(__dirname, 'index.html');
+  if (fs.existsSync(publicIndex)) return res.sendFile(publicIndex);
+  if (fs.existsSync(rootIndex))   return res.sendFile(rootIndex);
+  res.send('SnapServe is running');
+});
 
 // ══════════════════════════════════════════════════════════════
 //  SSE — GET /api/events
@@ -715,5 +729,6 @@ if (require.main === module) {
   startServer(Number(PORT));
 }
 
-module.exports = { app, PlatformState };
+app.PlatformState = PlatformState;
+module.exports = app;
 

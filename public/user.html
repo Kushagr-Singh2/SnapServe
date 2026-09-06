@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SnapServe — Hyperlocal Home Services</title>
+  <meta name="description" content="SnapServe: Instantly discover verified plumbers, electricians, AC technicians and home services near you." />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <!-- Core & Page CSS -->
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/user.css" />
+</head>
+<body>
+
+  <!-- Subtle Animated Background -->
+  <div class="bg-animated" aria-hidden="true" style="opacity:0.07">
+    <div class="bg-orb bg-orb-1" style="width:420px;height:420px;top:-120px;right:-120px;"></div>
+    <div class="bg-orb" style="width:280px;height:280px;background:var(--gold);bottom:120px;left:-80px;filter:blur(110px);opacity:0.05;animation:orbFloat 14s ease-in-out -4s infinite;"></div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       USER APP SHELL CONTAINER
+  ══════════════════════════════════════════════════════════ -->
+  <div class="user-app page-wrapper" id="user-app">
+
+    <!-- ── DESKTOP SIDEBAR ─────────────────────────────────── -->
+    <aside class="desktop-sidebar" id="desktop-sidebar" aria-label="Desktop Navigation">
+      <div class="sidebar-logo-area">
+        <a href="index.html" aria-label="SnapServe Home">
+          <img src="logo.jpg" alt="SnapServe" class="sidebar-logo-img" />
+        </a>
+      </div>
+
+      <!-- User Card -->
+      <div class="sidebar-user-card" id="sidebar-user-card">
+        <div class="flex items-center gap-sm">
+          <div class="user-avatar-btn" id="sidebar-avatar" style="width:38px;height:38px;font-size:13px">U</div>
+          <div style="overflow:hidden">
+            <div class="sidebar-user-name" id="sidebar-user-name">User</div>
+            <div class="sidebar-user-loc">
+              <i class="fa-solid fa-location-dot" style="color:var(--primary);font-size:9px"></i>
+              <span id="sidebar-user-loc">Connaught Place, New Delhi</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Nav Links -->
+      <nav class="sidebar-nav-section">
+        <span class="sidebar-nav-label">Menu</span>
+
+        <button class="sidebar-nav-item active" data-tab="home" onclick="switchTab('home', this)">
+          <i class="fa-solid fa-house" style="width:18px;color:var(--primary)"></i>
+          Home
+        </button>
+        <button class="sidebar-nav-item" data-tab="discover" onclick="switchTab('discover', this)">
+          <i class="fa-solid fa-map-location-dot" style="width:18px"></i>
+          Discover Map
+        </button>
+        <button class="sidebar-nav-item" data-tab="bookings" onclick="switchTab('bookings', this)">
+          <i class="fa-solid fa-calendar-check" style="width:18px"></i>
+          My Bookings
+          <span class="nav-count" id="snav-booking-count" style="display:none">0</span>
+        </button>
+
+        <span class="sidebar-nav-label" style="margin-top:var(--space-sm)">Account</span>
+
+        <button class="sidebar-nav-item" data-tab="profile" onclick="switchTab('profile', this)">
+          <i class="fa-regular fa-user" style="width:18px"></i>
+          My Profile
+        </button>
+      </nav>
+
+      <!-- Voice CTA in Sidebar -->
+      <button class="sidebar-voice-btn" id="sidebar-voice-btn" aria-label="Start Voice Booking" onclick="openVoiceModal()">
+        <i class="fa-solid fa-microphone"></i>
+        Voice Booking
+      </button>
+    </aside>
+
+    <!-- ── MAIN CONTENT WRAPPER ─────────────────────────────── -->
+    <div class="desktop-main" id="desktop-main">
+
+      <!-- ── TOPBAR ─────────────────────────────────────────── -->
+      <header class="mobile-header" role="banner" id="app-header">
+        <!-- Mobile Logo & Quick Actions -->
+        <div class="mobile-header-top">
+          <div class="flex items-center gap-sm">
+            <a href="index.html" aria-label="SnapServe Logo">
+              <img src="logo.jpg" alt="SnapServe" class="mobile-logo" />
+            </a>
+          </div>
+          <div class="mobile-header-actions">
+            <button class="notif-btn" id="notif-btn-mobile" aria-label="Notifications">
+              <i class="fa-regular fa-bell"></i>
+              <span class="notif-badge" aria-hidden="true"></span>
+            </button>
+            <div class="user-avatar-btn" id="mobile-avatar" aria-label="Profile">U</div>
+          </div>
+        </div>
+
+        <!-- Desktop Title & Search Bar -->
+        <div class="topbar-page-title" id="topbar-title">Home</div>
+
+        <div class="search-row">
+          <div class="location-chip" id="location-chip">
+            <i class="fa-solid fa-location-dot loc-pin"></i>
+            <span class="location-name" id="location-text">Connaught Place, New Delhi</span>
+          </div>
+
+          <div class="search-wrap">
+            <i class="fa-solid fa-magnifying-glass search-icon-left"></i>
+            <input type="search" class="search-field" id="global-search-input"
+              placeholder='Search "Plumber", "AC Repair", "Electrician"...'
+              aria-label="Search for a service or worker"
+              autocomplete="off" />
+            <button class="search-clear-btn" id="search-clear-btn" aria-label="Clear search">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+            <button class="search-voice-btn" id="search-voice-btn" aria-label="Voice search" onclick="openVoiceModal()">
+              <i class="fa-solid fa-microphone"></i>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- Search Results Overlay -->
+      <div class="search-results-overlay" id="search-results-overlay">
+        <div class="search-section-title">Services</div>
+        <div id="search-services-results" class="service-grid" style="margin-bottom:var(--space-md)"></div>
+
+        <div class="search-section-title">Nearby Workers</div>
+        <div id="search-workers-results" style="display:flex;flex-direction:column;gap:8px"></div>
+      </div>
+
+      <!-- ══════════════════════════════════════════════════════
+           TAB 1: HOME VIEW (`view-home`)
+      ══════════════════════════════════════════════════════ -->
+      <main class="user-scroll-body tab-view active" id="view-home" role="tabpanel">
+
+        <div class="content-main-col" id="content-main-col">
+
+          <!-- User Greeting Banner -->
+          <div class="greeting-banner">
+            <div class="greeting-line" id="greeting-line">Welcome,</div>
+            <div class="greeting-name" id="greeting-name">Loading...</div>
+            <div class="greeting-sub" id="greeting-sub">
+              <i class="fa-solid fa-location-dot" style="font-size:10px"></i>
+              <span>Connaught Place, New Delhi</span>
+            </div>
+          </div>
+
+          <!-- Promo Banner Card -->
+          <div class="promo-card" id="promo-card">
+            <div class="promo-eyebrow">
+              <i class="fa-solid fa-bolt" style="color:var(--primary)"></i>
+              Hyperlocal Cooperative
+            </div>
+            <div class="promo-title">Home repairs,<br/>done in a snap.</div>
+            <div class="promo-sub">Speak your problem or pick a service — verified workers near you.</div>
+            <button class="btn btn-primary btn-sm" style="padding:9px 18px;font-size:12px;" onclick="openVoiceModal()">
+              <i class="fa-solid fa-microphone"></i> Book with Voice
+            </button>
+            <div class="promo-emoji" aria-hidden="true">🔧</div>
+          </div>
+
+          <!-- Service Categories Section -->
+          <section aria-labelledby="services-heading">
+            <div class="section-header">
+              <h2 class="section-title" id="services-heading">Service Categories</h2>
+              <span class="section-link" onclick="switchTab('discover')">
+                View on map <i class="fa-solid fa-chevron-right" style="font-size:9px"></i>
+              </span>
+            </div>
+
+            <!-- Filter Pills -->
+            <div class="filter-pills-bar" id="filter-pills-bar">
+              <button class="filter-pill active" onclick="filterServices('all', this)">All Services</button>
+              <button class="filter-pill" onclick="filterServices('electrical', this)">⚡ Electrical</button>
+              <button class="filter-pill" onclick="filterServices('plumbing', this)">💧 Plumbing</button>
+              <button class="filter-pill" onclick="filterServices('ac', this)">❄️ AC Repair</button>
+              <button class="filter-pill" onclick="filterServices('cleaning', this)">🧹 Cleaning</button>
+              <button class="filter-pill" onclick="filterServices('carpentry', this)">🔨 Carpentry</button>
+            </div>
+
+            <!-- Service Chips Grid -->
+            <div class="service-grid" id="service-grid" role="list">
+              <!-- Rendered by user.js -->
+            </div>
+          </section>
+
+          <!-- Trust Badges -->
+          <div class="trust-strip" aria-label="Trust Badges">
+            <div class="trust-badge">
+              <div class="trust-badge-icon">🛡️</div>
+              <div class="trust-badge-text">Verified Workers</div>
+            </div>
+            <div class="trust-badge">
+              <div class="trust-badge-icon">💰</div>
+              <div class="trust-badge-text">Fair Pricing</div>
+            </div>
+            <div class="trust-badge">
+              <div class="trust-badge-icon">⚡</div>
+              <div class="trust-badge-text">Fast Response</div>
+            </div>
+          </div>
+
+          <!-- Nearby Workers Section -->
+          <section aria-labelledby="workers-heading">
+            <div class="section-header">
+              <h2 class="section-title" id="workers-heading">Available Workers Near You</h2>
+              <span class="section-link" onclick="switchTab('discover')">
+                Open Map <i class="fa-solid fa-map" style="font-size:9px"></i>
+              </span>
+            </div>
+            <div class="workers-strip" id="workers-strip-main" role="list">
+              <!-- Rendered by user.js -->
+            </div>
+          </section>
+
+        </div><!-- /content-main-col -->
+
+        <!-- Side Column (Desktop Only) -->
+        <aside class="content-side-col">
+          <div class="section-title" style="font-size:var(--text-sm);margin-bottom:var(--space-sm)">
+            <i class="fa-solid fa-location-dot" style="color:var(--primary);margin-right:6px"></i>
+            Live Nearby Workers
+          </div>
+          <div id="workers-strip-side" style="display:flex;flex-direction:column;gap:8px"></div>
+        </aside>
+
+      </main>
+
+      <!-- ══════════════════════════════════════════════════════
+           TAB 2: DISCOVER MAP VIEW (`view-discover`)
+      ══════════════════════════════════════════════════════ -->
+      <main class="user-scroll-body tab-view" id="view-discover" role="tabpanel" style="padding-bottom:100px;">
+        <div style="margin-bottom:var(--space-md);display:flex;align-items:center;justify-content:space-between">
+          <div>
+            <h2 class="section-title" style="font-size:var(--text-lg)">Nearby Worker Map</h2>
+            <div style="font-size:var(--text-xs);color:var(--text-muted)">Live simulated ride-hailing tracking</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="resetMapCenter()" style="font-size:11px">
+            <i class="fa-solid fa-crosshairs"></i> Recenter
+          </button>
+        </div>
+
+        <!-- Canvas Map Container -->
+        <div class="map-view-container" id="map-container">
+
+          <!-- Category filter bar overlay -->
+          <div class="map-overlay-top">
+            <div class="map-category-bar" id="map-category-bar">
+              <button class="map-cat-chip active" onclick="setMapFilter('all', this)">All</button>
+              <button class="map-cat-chip" onclick="setMapFilter('electrical', this)">⚡ Electrical</button>
+              <button class="map-cat-chip" onclick="setMapFilter('plumbing', this)">💧 Plumbing</button>
+              <button class="map-cat-chip" onclick="setMapFilter('ac', this)">❄️ AC Repair</button>
+              <button class="map-cat-chip" onclick="setMapFilter('cleaning', this)">🧹 Cleaning</button>
+            </div>
+          </div>
+
+          <!-- Floating Map Controls -->
+          <div class="map-controls-floating">
+            <button class="map-btn-floating" onclick="zoomMap(1.2)" aria-label="Zoom In"><i class="fa-solid fa-plus"></i></button>
+            <button class="map-btn-floating" onclick="zoomMap(0.8)" aria-label="Zoom Out"><i class="fa-solid fa-minus"></i></button>
+            <button class="map-btn-floating" onclick="recenterMap()" aria-label="Recenter"><i class="fa-solid fa-location-crosshairs"></i></button>
+          </div>
+
+          <!-- Canvas -->
+          <canvas id="discovery-map-canvas"></canvas>
+
+          <!-- Map Bottom Worker Preview Overlay -->
+          <div class="map-worker-preview" id="map-worker-preview" style="display:none">
+            <!-- Dynamically populated when worker pin is tapped -->
+          </div>
+        </div>
+
+        <!-- Workers List below Map -->
+        <div style="margin-top:var(--space-lg)">
+          <div class="section-title mb-sm">Active Workers on Map</div>
+          <div id="map-workers-list-grid" class="service-grid" style="grid-template-columns:repeat(auto-fill, minmax(180px, 1fr));gap:10px"></div>
+        </div>
+      </main>
+
+      <!-- ══════════════════════════════════════════════════════
+           TAB 3: BOOKINGS VIEW (`view-bookings`)
+      ══════════════════════════════════════════════════════ -->
+      <main class="user-scroll-body tab-view" id="view-bookings" role="tabpanel">
+        <div class="section-header" style="margin-bottom:var(--space-md)">
+          <h2 class="section-title">My Bookings</h2>
+          <span class="badge badge-primary" id="booking-badge-count">Active: 0</span>
+        </div>
+
+        <!-- Active Bookings List -->
+        <div id="user-active-bookings-list" style="display:flex;flex-direction:column;gap:12px;margin-bottom:var(--space-xl)"></div>
+
+        <!-- Past Bookings History -->
+        <div class="section-title text-sm mb-sm" style="color:var(--text-muted)">Booking History</div>
+        <div id="user-past-bookings-list" style="display:flex;flex-direction:column;gap:10px"></div>
+      </main>
+
+      <!-- ══════════════════════════════════════════════════════
+           TAB 4: PROFILE VIEW (`view-profile`)
+      ══════════════════════════════════════════════════════ -->
+      <main class="user-scroll-body tab-view" id="view-profile" role="tabpanel">
+        <div id="user-profile-card">
+          <!-- Dynamically populated -->
+        </div>
+
+        <div style="margin-top:var(--space-lg);display:flex;flex-direction:column;gap:10px">
+          <div class="card" style="padding:14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="showToast('Saved Addresses','Connaught Place, New Delhi','info')">
+            <div class="flex items-center gap-md">
+              <i class="fa-solid fa-location-dot" style="color:var(--primary);font-size:18px"></i>
+              <div>
+                <div style="font-weight:700;font-size:var(--text-sm)">Saved Addresses</div>
+                <div style="font-size:11px;color:var(--text-muted)">1 address saved</div>
+              </div>
+            </div>
+            <i class="fa-solid fa-chevron-right" style="font-size:11px;color:var(--text-muted)"></i>
+          </div>
+
+          <div class="card" style="padding:14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="showToast('Payment Methods','UPI / Cash on Delivery active','info')">
+            <div class="flex items-center gap-md">
+              <i class="fa-solid fa-wallet" style="color:var(--gold);font-size:18px"></i>
+              <div>
+                <div style="font-weight:700;font-size:var(--text-sm)">Payment Methods</div>
+                <div style="font-size:11px;color:var(--text-muted)">UPI, Cash & Cards</div>
+              </div>
+            </div>
+            <i class="fa-solid fa-chevron-right" style="font-size:11px;color:var(--text-muted)"></i>
+          </div>
+
+          <div class="card" style="padding:14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="showToast('Cooperative Guarantee','100% fair pricing & verified local workers','success')">
+            <div class="flex items-center gap-md">
+              <i class="fa-solid fa-handshake" style="color:var(--success);font-size:18px"></i>
+              <div>
+                <div style="font-weight:700;font-size:var(--text-sm)">Cooperative Member</div>
+                <div style="font-size:11px;color:var(--text-muted)">Supporting local worker fair income</div>
+              </div>
+            </div>
+            <i class="fa-solid fa-chevron-right" style="font-size:11px;color:var(--text-muted)"></i>
+          </div>
+
+          <div class="card" style="padding:14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.05)" onclick="Session.logout()">
+            <div class="flex items-center gap-md">
+              <i class="fa-solid fa-arrow-right-from-bracket" style="color:var(--danger);font-size:18px"></i>
+              <div>
+                <div style="font-weight:700;font-size:var(--text-sm);color:var(--danger)">Logout Session</div>
+                <div style="font-size:11px;color:var(--text-muted)">Return to Demo Login Screen</div>
+              </div>
+            </div>
+            <i class="fa-solid fa-chevron-right" style="font-size:11px;color:var(--danger)"></i>
+          </div>
+        </div>
+      </main>
+
+    </div><!-- /desktop-main -->
+
+    <!-- ── BOTTOM NAVIGATION BAR (Mobile Only) ─────────────── -->
+    <nav class="bottom-nav" role="navigation" aria-label="Mobile Navigation">
+      <button class="nav-item active" data-tab="home" onclick="switchTab('home', this)" aria-label="Home">
+        <span class="nav-item-icon">🏠</span>
+        <span class="nav-item-label">Home</span>
+      </button>
+
+      <button class="nav-item" data-tab="discover" onclick="switchTab('discover', this)" aria-label="Discover Map">
+        <span class="nav-item-icon">🗺️</span>
+        <span class="nav-item-label">Discover</span>
+      </button>
+
+      <!-- Center Voice FAB -->
+      <button class="nav-voice-fab" id="voice-fab-btn" onclick="openVoiceModal()" aria-label="Voice Booking">
+        <i class="fa-solid fa-microphone"></i>
+      </button>
+
+      <button class="nav-item" data-tab="bookings" onclick="switchTab('bookings', this)" aria-label="Bookings">
+        <span class="nav-item-icon">📋</span>
+        <span class="nav-item-label">Bookings</span>
+      </button>
+
+      <button class="nav-item" data-tab="profile" onclick="switchTab('profile', this)" aria-label="Profile">
+        <span class="nav-item-icon">👤</span>
+        <span class="nav-item-label">Profile</span>
+      </button>
+    </nav>
+
+  </div><!-- /user-app -->
+
+  <!-- ══════════════════════════════════════════════════════
+       WORKER PROFILE DETAIL SHEET MODAL
+  ══════════════════════════════════════════════════════ -->
+  <div class="modal-backdrop" id="worker-modal" role="dialog" aria-modal="true" aria-label="Worker Details">
+    <div class="modal-inner" id="worker-modal-inner">
+      <!-- Dynamically populated by user.js -->
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════
+       PRICE NEGOTIATION CHAT MODAL
+  ══════════════════════════════════════════════════════ -->
+  <div class="modal-backdrop" id="negotiation-modal" role="dialog" aria-modal="true" aria-label="Price Negotiation">
+    <div class="modal-inner" id="negotiation-modal-inner" style="max-width:480px">
+      <!-- Dynamically populated by user.js -->
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════
+       SERVICE WORKERS SHEET MODAL
+  ══════════════════════════════════════════════════════ -->
+  <div class="modal-backdrop" id="service-modal" role="dialog" aria-modal="true" aria-label="Service Category Workers">
+    <div class="modal-inner" id="service-modal-inner">
+      <!-- Dynamically populated by user.js -->
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════
+       VOICE BOOKING MODAL OVERLAY
+  ══════════════════════════════════════════════════════ -->
+  <div class="modal-backdrop" id="voice-modal" role="dialog" aria-modal="true" aria-label="AI Voice Booking">
+    <div class="modal-inner" id="voice-modal-inner">
+      <div class="modal-handle" aria-hidden="true"></div>
+
+      <div style="text-align:center;margin-bottom:var(--space-lg)">
+        <div style="font-size:10px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:var(--space-md)">
+          🎙️ AI VOICE BOOKING
+        </div>
+
+        <!-- Mic Animation -->
+        <div style="position:relative;width:88px;height:88px;margin:0 auto var(--space-md)">
+          <div id="vm-ring-1" style="position:absolute;inset:0;border-radius:50%;border:1.5px solid var(--primary);opacity:0;animation:micRing 2.4s ease-in-out infinite"></div>
+          <div id="vm-ring-2" style="position:absolute;inset:0;border-radius:50%;border:1.5px solid var(--primary);opacity:0;animation:micRing 2.4s ease-in-out 0.8s infinite"></div>
+          <button id="voice-modal-mic"
+            style="position:absolute;inset:12px;border-radius:50%;background:var(--gradient-primary);border:none;display:flex;align-items:center;justify-content:center;font-size:26px;color:#fff;cursor:pointer;box-shadow:0 8px 28px rgba(255,107,0,0.45);transition:all 0.3s ease">
+            <i class="fa-solid fa-microphone"></i>
+          </button>
+        </div>
+
+        <div id="vm-status" style="font-size:var(--text-lg);font-weight:700;color:var(--text-primary);margin-bottom:4px">
+          Tell us what's wrong
+        </div>
+        <div style="font-size:var(--text-sm);color:var(--text-muted);margin-bottom:var(--space-lg);font-style:italic">
+          "बस बोलिए, मदद पहुँच जाएगी।"
+        </div>
+
+        <!-- Language buttons -->
+        <div style="display:flex;justify-content:center;gap:var(--space-sm);margin-bottom:var(--space-lg)" id="lang-btns">
+          <button class="btn btn-ghost btn-sm active-lang" data-lang="hi-IN" id="lang-hi" style="font-size:11px;padding:6px 14px">🇮🇳 Hindi</button>
+          <button class="btn btn-ghost btn-sm" data-lang="en-IN" id="lang-en" style="font-size:11px;padding:6px 14px">🇬🇧 English</button>
+          <button class="btn btn-ghost btn-sm" data-lang="hi-IN" id="lang-hin" style="font-size:11px;padding:6px 14px">🔀 Hinglish</button>
+        </div>
+
+        <button class="btn btn-primary btn-full" id="tap-to-speak-btn" style="font-size:var(--text-sm);padding:14px">
+          <i class="fa-solid fa-microphone"></i> TAP TO SPEAK
+        </button>
+
+        <div id="voice-transcript-box"
+          style="display:none;margin-top:var(--space-md);padding:12px 14px;background:rgba(255,107,0,0.06);border:1px solid rgba(255,107,0,0.18);border-radius:var(--radius-lg);font-size:var(--text-sm);color:var(--text-secondary);text-align:left;font-style:italic"
+          aria-live="polite"></div>
+
+        <!-- Quick Demo Voice Prompts (Useful for quick tests or without mic) -->
+        <div style="margin-top:var(--space-md);text-align:left">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+            <span style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em">
+              Or try a sample request:
+            </span>
+            <button type="button" class="btn btn-ghost btn-xs" onclick="VoiceAI.promptGeminiKey()" style="font-size:10px;padding:1px 6px;border-radius:6px;color:var(--primary-light)" title="Configure Google Gemini API Key">
+              🔑 Gemini Key
+            </button>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px" id="voice-sample-chips">
+            <button type="button" class="btn btn-ghost btn-sm voice-chip-btn" data-sample="लाइट नहीं चल रही है" style="font-size:11px;padding:4px 8px;border-radius:12px;background:rgba(255,107,0,0.1);color:var(--primary-light)">
+              💡 लाइट नहीं चल रही है
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm voice-chip-btn" data-sample="Kitchen ka nal bohot leak ho raha hai paani beh raha hai" style="font-size:11px;padding:4px 8px;border-radius:12px;background:rgba(255,255,255,0.04)">
+              💧 Tap Leaking
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm voice-chip-btn" data-sample="Room ka fan aur switch board spark kar raha hai short circuit" style="font-size:11px;padding:4px 8px;border-radius:12px;background:rgba(255,255,255,0.04)">
+              ⚡ Switch Sparking
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm voice-chip-btn" data-sample="Bedroom AC cooling nahi kar raha hai garam hawa de raha hai" style="font-size:11px;padding:4px 8px;border-radius:12px;background:rgba(255,255,255,0.04)">
+              ❄️ AC Not Cooling
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm voice-chip-btn" data-sample="Ghar ki deep cleaning karwani hai sofa aur washroom saaf karna hai" style="font-size:11px;padding:4px 8px;border-radius:12px;background:rgba(255,255,255,0.04)">
+              🧹 Deep Cleaning
+            </button>
+          </div>
+        </div>
+
+        <!-- Manual Text Fallback -->
+        <div style="margin-top:var(--space-md);display:flex;gap:6px">
+          <input type="text" id="voice-manual-input" placeholder="Or type your problem here..." 
+            style="flex:1;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:8px 12px;font-size:12px;color:#fff" />
+          <button type="button" id="voice-manual-btn" class="btn btn-secondary btn-sm" style="font-size:11px;padding:8px 12px;white-space:nowrap">
+            Analyze
+          </button>
+        </div>
+      </div>
+
+      <!-- AI Analysis result -->
+      <div id="voice-ai-result" style="display:none"></div>
+
+      <button class="btn btn-ghost btn-full" style="margin-top:var(--space-md);color:var(--text-muted);font-size:var(--text-sm)" onclick="closeVoiceModal()">
+        Cancel
+      </button>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" aria-live="polite"></div>
+
+  <style>
+    @keyframes micRing { 0% { transform:scale(1); opacity:0.7; } 100% { transform:scale(2.2); opacity:0; } }
+    .active-lang { border-color: var(--primary) !important; color: var(--primary-light) !important; background: rgba(255,107,0,0.1) !important; }
+  </style>
+
+  <!-- JS Dependencies -->
+  <script src="js/data.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/voice.js"></script>
+  <script src="js/user.js"></script>
+
+</body>
+</html>
