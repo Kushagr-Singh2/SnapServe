@@ -12,13 +12,18 @@ const CustomerState = {
   selectedWorkerId: null,
   searchQuery: '',
   currentLocation: localStorage.getItem('snapserve_user_loc') || 'Select Location',
-  coords: null,
+  coords: (() => {
+    try {
+      const saved = localStorage.getItem('snapserve_user_coords');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) { return null; }
+  })(),
   workers: [],
   requests: [],
+  osmMap: null,
+  userMarker: null,
+  workerMarkers: [],
   map: {
-    canvas: null,
-    ctx: null,
-    zoom: 1.0,
     workerPins: [],
     selectedPinId: null,
   }
@@ -76,9 +81,8 @@ async function loadCustomerDataFromServer() {
     renderBookingsTab();
     renderActiveNegotiationCard();
 
-    if (CustomerState.map.canvas) {
-      updateMapPins();
-      drawDiscoveryMap();
+    if (CustomerState.osmMap) {
+      updateOpenStreetMap();
     }
   } catch (err) {
     console.warn('Error loading customer data:', err);
@@ -113,43 +117,42 @@ function renderUserHeader() {
   if (topLoc) topLoc.textContent = curLoc;
 }
 
-// ── Location Management & Geolocation ────────────────────────────────
+// ── Location Management & Geolocation (100% Free OpenStreetMap) ──────
 window.initLocationService = function() {
   const saved = localStorage.getItem('snapserve_user_loc');
   if (saved && saved !== 'Select Location') {
     CustomerState.currentLocation = saved;
-    updateLocationUI(saved);
+    updateLocationUI(saved, CustomerState.coords);
   } else {
     CustomerState.currentLocation = 'Select Location';
     updateLocationUI('Select Location');
-    // Prompt browser for location
+    // Prompt browser for GPS location
     detectCurrentLocation(false);
   }
-
-  // Check if server provides a Google Maps API Key
-  fetch('/api/config/maps')
-    .then(r => r.json())
-    .then(data => {
-      if (data && data.apiKey) {
-        window.GOOGLE_MAPS_API_KEY = data.apiKey;
-        loadGoogleMapsScript(data.apiKey);
-      }
-    })
-    .catch(() => {});
 };
 
-function loadGoogleMapsScript(apiKey) {
-  if (document.getElementById('google-maps-sdk')) return;
-  const script = document.createElement('script');
-  script.id = 'google-maps-sdk';
-  script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
-  script.async = true;
-  script.defer = true;
-  document.head.appendChild(script);
+function getPresetCoords(locName) {
+  if (!locName) return null;
+  const presets = {
+    'Connaught Place, New Delhi': { lat: 28.6315, lon: 77.2167 },
+    'South Extension, New Delhi': { lat: 28.5684, lon: 77.2215 },
+    'Noida Sector 62, NCR':       { lat: 28.6270, lon: 77.3623 },
+    'Cyber City, Gurugram':       { lat: 28.4950, lon: 77.0895 },
+    'Koramangala, Bengaluru':     { lat: 12.9352, lon: 77.6245 },
+    'Bandra West, Mumbai':        { lat: 19.0596, lon: 72.8295 },
+    'Hitec City, Hyderabad':      { lat: 17.4474, lon: 78.3762 },
+    'Kothrud, Pune':              { lat: 18.5074, lon: 73.8077 },
+  };
+  return presets[locName] || null;
 }
 
-function updateLocationUI(locName) {
+function updateLocationUI(locName, coords = null) {
   CustomerState.currentLocation = locName;
+  if (coords) {
+    CustomerState.coords = coords;
+  } else if (getPresetCoords(locName)) {
+    CustomerState.coords = getPresetCoords(locName);
+  }
 
   const locText = document.getElementById('location-text');
   if (locText) locText.textContent = locName;
@@ -160,8 +163,10 @@ function updateLocationUI(locName) {
   const greetLoc = document.getElementById('greeting-user-loc');
   if (greetLoc) greetLoc.textContent = locName;
 
-  if (CustomerState.map && CustomerState.map.canvas) {
-    drawDiscoveryMap();
+  if (CustomerState.osmMap) {
+    const targetCoords = CustomerState.coords || { lat: 28.6139, lon: 77.2090 };
+    CustomerState.osmMap.setView([targetCoords.lat, targetCoords.lon], 14);
+    updateOpenStreetMap();
   }
 }
 
@@ -176,21 +181,49 @@ window.closeLocationModal = function() {
 };
 
 window.selectPresetLocation = function(locName) {
+  const coords = getPresetCoords(locName);
   localStorage.setItem('snapserve_user_loc', locName);
-  updateLocationUI(locName);
+  if (coords) localStorage.setItem('snapserve_user_coords', JSON.stringify(coords));
+  updateLocationUI(locName, coords);
   closeLocationModal();
   if (window.showToast) showToast('Location Updated', `Set to ${locName}`, 'success');
 };
 
-window.applyManualLocation = function() {
+window.applyManualLocation = async function() {
   const input = document.getElementById('manual-loc-input');
   if (!input || !input.value.trim()) return;
-  const val = input.value.trim();
-  localStorage.setItem('snapserve_user_loc', val);
-  updateLocationUI(val);
+  const query = input.value.trim();
+
   closeLocationModal();
   input.value = '';
-  if (window.showToast) showToast('Location Updated', `Set to ${val}`, 'success');
+  if (window.showToast) showToast('Locating...', query, 'info');
+
+  try {
+    // 100% Free OpenStreetMap Nominatim Search API
+    const osmUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1&addressdetails=1`;
+    const res = await fetch(osmUrl, { headers: { 'Accept': 'application/json' } });
+    if (res.ok) {
+      const results = await res.json();
+      if (results && results.length > 0) {
+        const first = results[0];
+        const lat = parseFloat(first.lat);
+        const lon = parseFloat(first.lon);
+        const locName = first.display_name.split(',').slice(0, 2).join(',').trim();
+        localStorage.setItem('snapserve_user_loc', locName);
+        localStorage.setItem('snapserve_user_coords', JSON.stringify({ lat, lon }));
+        updateLocationUI(locName, { lat, lon });
+        if (window.showToast) showToast('Location Set', locName, 'success');
+        return;
+      }
+    }
+  } catch (e) {
+    console.warn('OSM search error:', e);
+  }
+
+  // Fallback if network search is blocked
+  localStorage.setItem('snapserve_user_loc', query);
+  updateLocationUI(query);
+  if (window.showToast) showToast('Location Set', query, 'success');
 };
 
 window.detectCurrentLocation = function(userTriggered = false) {
@@ -202,7 +235,7 @@ window.detectCurrentLocation = function(userTriggered = false) {
 
   if (!navigator.geolocation) {
     if (userTriggered) {
-      alert('Geolocation is not supported by your browser. Please type your location.');
+      alert('Geolocation is not supported by your browser. Please select or type your location.');
       if (btn) {
         btn.innerHTML = `<i class="fa-solid fa-location-crosshairs"></i> Use Current Location (GPS)`;
         btn.disabled = false;
@@ -215,12 +248,14 @@ window.detectCurrentLocation = function(userTriggered = false) {
   navigator.geolocation.getCurrentPosition(
     async (position) => {
       const { latitude, longitude } = position.coords;
-      CustomerState.coords = { lat: latitude, lon: longitude };
+      const coords = { lat: latitude, lon: longitude };
+      CustomerState.coords = coords;
+      localStorage.setItem('snapserve_user_coords', JSON.stringify(coords));
 
       try {
         const locName = await reverseGeocode(latitude, longitude);
         localStorage.setItem('snapserve_user_loc', locName);
-        updateLocationUI(locName);
+        updateLocationUI(locName, coords);
         if (userTriggered) {
           closeLocationModal();
           if (window.showToast) showToast('Location Detected', locName, 'success');
@@ -229,7 +264,7 @@ window.detectCurrentLocation = function(userTriggered = false) {
         console.warn('Reverse geocode error:', err);
         const fallbackName = `Lat: ${latitude.toFixed(2)}, Lon: ${longitude.toFixed(2)}`;
         localStorage.setItem('snapserve_user_loc', fallbackName);
-        updateLocationUI(fallbackName);
+        updateLocationUI(fallbackName, coords);
         if (userTriggered) closeLocationModal();
       } finally {
         if (btn) {
@@ -257,29 +292,7 @@ window.detectCurrentLocation = function(userTriggered = false) {
 };
 
 async function reverseGeocode(lat, lon) {
-  // 1. Google Maps Geocoding API if key configured
-  const googleKey = window.GOOGLE_MAPS_API_KEY;
-  if (googleKey) {
-    try {
-      const gUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lon}&key=${googleKey}`;
-      const res = await fetch(gUrl);
-      const data = await res.json();
-      if (data.results && data.results.length > 0) {
-        const comp = data.results[0].address_components || [];
-        const sub = comp.find(c => c.types.includes('sublocality') || c.types.includes('neighborhood'))?.long_name;
-        const loc = comp.find(c => c.types.includes('locality'))?.long_name;
-        const adm = comp.find(c => c.types.includes('administrative_area_level_2'))?.long_name;
-        if (sub && loc) return `${sub}, ${loc}`;
-        if (sub && adm) return `${sub}, ${adm}`;
-        if (loc) return loc;
-        return data.results[0].formatted_address.split(',').slice(0, 2).join(',').trim();
-      }
-    } catch (e) {
-      console.warn('Google geocoding error:', e);
-    }
-  }
-
-  // 2. High-precision client-side reverse geocoding via BigDataCloud (Free, no key required)
+  // 1. Free client-side reverse geocoding via BigDataCloud (instant, high accuracy)
   try {
     const bdcUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`;
     const res = await fetch(bdcUrl);
@@ -295,7 +308,7 @@ async function reverseGeocode(lat, lon) {
     console.warn('BigDataCloud geocode error:', e);
   }
 
-  // 3. OpenStreetMap Nominatim Fallback
+  // 2. OpenStreetMap Nominatim Reverse Geocoding (100% Free & Open Source)
   try {
     const osmUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=14&addressdetails=1`;
     const res = await fetch(osmUrl, { headers: { 'Accept': 'application/json' } });
@@ -844,180 +857,206 @@ function renderActiveNegotiationCard() {
   `;
 }
 
-// ── Map Canvas Engine ────────────────────────────────────────────────
+// ── Free OpenStreetMap Leaflet Engine ────────────────────────────────
 function initDiscoveryMap() {
-  const canvas = document.getElementById('discovery-map-canvas');
-  if (!canvas) return;
+  const mapDiv = document.getElementById('osm-map');
+  if (!mapDiv || typeof L === 'undefined') return;
 
-  CustomerState.map.canvas = canvas;
-  CustomerState.map.ctx = canvas.getContext('2d');
+  const coords = CustomerState.coords || getPresetCoords(CustomerState.currentLocation) || { lat: 28.6139, lon: 77.2090 };
 
-  canvas.addEventListener('click', handleMapClick);
-  window.addEventListener('resize', resizeMapCanvas);
-  resizeMapCanvas();
+  if (!CustomerState.osmMap) {
+    CustomerState.osmMap = L.map('osm-map', {
+      center: [coords.lat, coords.lon],
+      zoom: 14,
+      zoomControl: false
+    });
+
+    // 100% Free OpenStreetMap Dark Matter Tiles (Powered by CartoDB / OSM)
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/">CARTO</a>',
+      subdomains: 'abcd',
+      maxZoom: 19
+    }).addTo(CustomerState.osmMap);
+
+    // Clicking on map outside pins dismisses preview
+    CustomerState.osmMap.on('click', () => {
+      const preview = document.getElementById('map-worker-preview');
+      if (preview) preview.style.display = 'none';
+    });
+  } else {
+    CustomerState.osmMap.setView([coords.lat, coords.lon], 14);
+  }
+
+  updateOpenStreetMap();
 }
 
-function resizeMapCanvas() {
-  const container = document.getElementById('map-container');
-  const canvas = CustomerState.map.canvas;
-  if (!container || !canvas) return;
+function updateOpenStreetMap() {
+  if (!CustomerState.osmMap || typeof L === 'undefined') return;
 
-  const rect = container.getBoundingClientRect();
-  canvas.width = rect.width * (window.devicePixelRatio || 1);
-  canvas.height = (rect.height || 360) * (window.devicePixelRatio || 1);
+  const coords = CustomerState.coords || getPresetCoords(CustomerState.currentLocation) || { lat: 28.6139, lon: 77.2090 };
 
-  updateMapPins();
-  drawDiscoveryMap();
-}
+  // 1. Update or create User Pulse Marker
+  const userPinHtml = `
+    <div class="osm-user-pin-wrap">
+      <div class="osm-user-pulse"></div>
+      <div class="osm-user-dot"><i class="fa-solid fa-location-arrow"></i></div>
+    </div>
+  `;
+  const userIcon = L.divIcon({
+    className: 'osm-user-icon-container',
+    html: userPinHtml,
+    iconSize: [38, 38],
+    iconAnchor: [19, 19]
+  });
 
-function updateMapPins() {
-  let filtered = CustomerState.workers;
+  const locLabel = (CustomerState.currentLocation && CustomerState.currentLocation !== 'Select Location')
+    ? CustomerState.currentLocation
+    : 'Your Location';
+
+  if (CustomerState.userMarker) {
+    CustomerState.userMarker.setLatLng([coords.lat, coords.lon]);
+    CustomerState.userMarker.setPopupContent(`
+      <div style="font-weight:700;font-size:12px;color:#fff;padding:2px">
+        📍 ${locLabel}
+      </div>
+    `);
+  } else {
+    CustomerState.userMarker = L.marker([coords.lat, coords.lon], { icon: userIcon, zIndexOffset: 1000 })
+      .addTo(CustomerState.osmMap)
+      .bindPopup(`
+        <div style="font-weight:700;font-size:12px;color:#fff;padding:2px">
+          📍 ${locLabel}
+        </div>
+      `, { className: 'snapserve-map-popup' });
+  }
+
+  // 2. Clear previous worker markers
+  if (CustomerState.workerMarkers && CustomerState.workerMarkers.length) {
+    CustomerState.workerMarkers.forEach(m => m.remove());
+  }
+  CustomerState.workerMarkers = [];
+
+  // 3. Filter workers
+  let filtered = CustomerState.workers || [];
   if (CustomerState.activeMapFilter !== 'all') {
     filtered = filtered.filter(w =>
       (w.services || []).some(s => s.category.toLowerCase().includes(CustomerState.activeMapFilter.toLowerCase()))
     );
   }
 
-  CustomerState.map.workerPins = filtered.map((w, i) => {
-    const angle = (i / Math.max(1, filtered.length)) * Math.PI * 2 + 0.4;
-    const r = 0.22 + (i % 3) * 0.08;
-    return {
-      id: w.id,
-      worker: w,
-      relX: 0.5 + Math.cos(angle) * r,
-      relY: 0.5 + Math.sin(angle) * r,
-    };
-  });
-}
+  // 4. Place worker markers
+  const emojiMap = {
+    electrical: '⚡',
+    plumbing: '💧',
+    ac: '❄️',
+    cleaning: '🧹',
+    carpentry: '🪚',
+    painting: '🎨',
+    appliance: '🔌'
+  };
 
-function drawDiscoveryMap() {
-  const { canvas, ctx, zoom, selectedPinId } = CustomerState.map;
-  if (!canvas || !ctx) return;
+  filtered.forEach((w, i) => {
+    const s = w.services && w.services[0] ? w.services[0] : { category: 'Service', basePrice: 499 };
+    const catLower = (s.category || '').toLowerCase();
+    let catEmoji = '🛠️';
+    for (const [k, v] of Object.entries(emojiMap)) {
+      if (catLower.includes(k)) { catEmoji = v; break; }
+    }
 
-  const width = canvas.width;
-  const height = canvas.height;
-  const cx = width / 2;
-  const cy = height / 2;
+    // Geographically scatter workers around user coordinates (approx 400m - 2.5km)
+    const angle = (i / Math.max(1, filtered.length)) * Math.PI * 2 + 0.45;
+    const radius = 0.005 + ((i % 4) * 0.004);
+    const workerLat = coords.lat + Math.sin(angle) * radius;
+    const workerLon = coords.lon + Math.cos(angle) * (radius * 1.15);
 
-  ctx.clearRect(0, 0, width, height);
+    const workerIcon = L.divIcon({
+      className: 'osm-worker-pin-wrap',
+      html: `
+        <div class="osm-worker-pin">
+          <span class="osm-worker-emoji">${catEmoji}</span>
+          <span class="osm-worker-badge">${Utils.formatPrice(s.basePrice)}</span>
+        </div>
+      `,
+      iconSize: [68, 36],
+      iconAnchor: [34, 18]
+    });
 
-  // Background grid
-  ctx.fillStyle = '#0B0D12';
-  ctx.fillRect(0, 0, width, height);
+    const popupContent = `
+      <div class="osm-popup-card">
+        <div class="osm-popup-header">
+          <div class="osm-popup-avatar">${Utils.getInitials(w.name)}</div>
+          <div>
+            <div class="osm-popup-name">${w.name} <i class="fa-solid fa-circle-check" style="color:#22c55e;font-size:10px"></i></div>
+            <div class="osm-popup-sub">${s.category} · 📍 ${w.location || 'Local Area'}</div>
+          </div>
+        </div>
+        <div class="osm-popup-pricing">
+          <span>Starting at</span>
+          <strong>${Utils.formatPrice(s.basePrice)}</strong>
+        </div>
+        <button class="btn btn-primary btn-sm osm-popup-book-btn" onclick="viewWorkerProfile('${w.id}')">
+          View Profile & Book
+        </button>
+      </div>
+    `;
 
-  ctx.strokeStyle = 'rgba(255,255,255,0.04)';
-  ctx.lineWidth = 1;
-  const step = 40 * zoom;
-  for (let x = 0; x < width; x += step) {
-    ctx.beginPath();
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x, height);
-    ctx.stroke();
-  }
-  for (let y = 0; y < height; y += step) {
-    ctx.beginPath();
-    ctx.moveTo(0, y);
-    ctx.lineTo(width, y);
-    ctx.stroke();
-  }
+    const marker = L.marker([workerLat, workerLon], { icon: workerIcon })
+      .addTo(CustomerState.osmMap)
+      .bindPopup(popupContent, { className: 'snapserve-map-popup', maxWidth: 260 });
 
-  // Radar range ring around user
-  ctx.strokeStyle = 'rgba(255, 107, 0, 0.2)';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.arc(cx, cy, 120 * zoom, 0, Math.PI * 2);
-  ctx.stroke();
+    marker.on('click', () => {
+      showWorkerMapPreview(w);
+    });
 
-  // User Dot
-  ctx.fillStyle = '#FF6B00';
-  ctx.beginPath();
-  ctx.arc(cx, cy, 9 * zoom, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = '#FFFFFF';
-  ctx.font = 'bold 11px sans-serif';
-  ctx.textAlign = 'center';
-  const mapLabel = (CustomerState.currentLocation && CustomerState.currentLocation !== 'Select Location')
-    ? CustomerState.currentLocation
-    : 'YOU ARE HERE';
-  ctx.fillText(mapLabel.length > 25 ? mapLabel.slice(0, 25) + '...' : mapLabel, cx, cy - 14 * zoom);
-
-  // Empty state if no pins
-  if (CustomerState.map.workerPins.length === 0) {
-    ctx.fillStyle = 'rgba(255,255,255,0.4)';
-    ctx.font = '12px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('No verified professionals nearby yet.', cx, cy + 50 * zoom);
-  }
-
-  // Render Worker Pins
-  CustomerState.map.workerPins.forEach(pin => {
-    const px = cx + (pin.relX - 0.5) * width * zoom;
-    const py = cy + (pin.relY - 0.5) * height * zoom;
-    pin.px = px;
-    pin.py = py;
-
-    const isSelected = selectedPinId === pin.id;
-
-    // Pin circle
-    ctx.fillStyle = isSelected ? '#FF6B00' : 'rgba(255, 107, 0, 0.7)';
-    ctx.beginPath();
-    ctx.arc(px, py, (isSelected ? 16 : 12) * zoom, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Pin border
-    ctx.strokeStyle = '#FFFFFF';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // Pin text
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = 'bold 11px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(pin.worker.name, px, py - 16 * zoom);
+    CustomerState.workerMarkers.push(marker);
   });
 
-  renderMapWorkersGrid();
+  renderMapWorkersGrid(filtered);
 }
 
-function handleMapClick(e) {
-  const canvas = CustomerState.map.canvas;
-  if (!canvas) return;
+function showWorkerMapPreview(w) {
+  const preview = document.getElementById('map-worker-preview');
+  if (!preview) return;
 
-  const rect = canvas.getBoundingClientRect();
-  const scaleX = canvas.width / rect.width;
-  const scaleY = canvas.height / rect.height;
-
-  const clickX = (e.clientX - rect.left) * scaleX;
-  const clickY = (e.clientY - rect.top) * scaleY;
-
-  let clickedPin = null;
-  CustomerState.map.workerPins.forEach(pin => {
-    if (!pin.px || !pin.py) return;
-    if (Math.hypot(clickX - pin.px, clickY - pin.py) < 35) clickedPin = pin;
-  });
-
-  if (clickedPin) {
-    CustomerState.map.selectedPinId = clickedPin.id;
-    drawDiscoveryMap();
-    viewWorkerProfile(clickedPin.worker.id);
-  }
+  const s = w.services && w.services[0] ? w.services[0] : { category: 'Service', basePrice: 499 };
+  preview.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+      <div style="display:flex;align-items:center;gap:10px;cursor:pointer" onclick="viewWorkerProfile('${w.id}')">
+        <div class="wm-avatar" style="width:40px;height:40px;font-size:13px">${Utils.getInitials(w.name)}</div>
+        <div>
+          <div style="font-weight:800;font-size:14px;color:#fff">${w.name} <i class="fa-solid fa-circle-check" style="color:#22c55e;font-size:11px"></i></div>
+          <div style="font-size:11px;color:var(--primary-light)">${s.category} · ${Utils.formatPrice(s.basePrice)}</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <button class="btn btn-primary btn-sm" onclick="viewWorkerProfile('${w.id}')" style="font-size:11px;padding:6px 12px">
+          Book
+        </button>
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('map-worker-preview').style.display='none'" style="font-size:12px;padding:6px 8px;color:var(--text-muted)">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    </div>
+  `;
+  preview.style.display = 'block';
 }
 
-function renderMapWorkersGrid() {
+function renderMapWorkersGrid(filteredWorkers = null) {
   const grid = document.getElementById('map-workers-list-grid');
   if (!grid) return;
 
-  if (CustomerState.workers.length === 0) {
+  const workers = filteredWorkers || CustomerState.workers || [];
+
+  if (workers.length === 0) {
     grid.innerHTML = `
       <div style="padding:24px;text-align:center;color:var(--text-muted);font-size:12px;grid-column:1/-1;background:var(--bg-glass);border:1px dashed var(--border-card);border-radius:14px">
-        No verified professionals nearby yet. Approved workers will appear on the map dynamically.
+        No verified professionals nearby for this filter. Approved workers will appear on the map dynamically.
       </div>
     `;
     return;
   }
 
-  grid.innerHTML = CustomerState.workers.map(w => {
+  grid.innerHTML = workers.map(w => {
     const s = w.services && w.services[0] ? w.services[0] : { category: 'Service', basePrice: 0 };
     return `
       <div style="padding:12px;background:var(--bg-glass);border:1px solid var(--border-card);border-radius:var(--radius-xl);cursor:pointer;display:flex;align-items:center;gap:10px"
@@ -1037,19 +1076,19 @@ window.setMapFilter = function(category, chipEl) {
   CustomerState.activeMapFilter = category;
   document.querySelectorAll('#map-category-bar .map-cat-chip').forEach(c => c.classList.remove('active'));
   if (chipEl) chipEl.classList.add('active');
-  updateMapPins();
-  drawDiscoveryMap();
+  updateOpenStreetMap();
 };
 
-window.zoomMap = function(factor) {
-  CustomerState.map.zoom = Math.max(0.5, Math.min(2.5, CustomerState.map.zoom * factor));
-  drawDiscoveryMap();
+window.zoomMap = function(delta) {
+  if (!CustomerState.osmMap) return;
+  if (delta > 0) CustomerState.osmMap.zoomIn();
+  else CustomerState.osmMap.zoomOut();
 };
 
 window.resetMapCenter = function() {
-  CustomerState.map.zoom = 1.0;
-  CustomerState.map.selectedPinId = null;
-  drawDiscoveryMap();
+  if (!CustomerState.osmMap) return;
+  const coords = CustomerState.coords || getPresetCoords(CustomerState.currentLocation) || { lat: 28.6139, lon: 77.2090 };
+  CustomerState.osmMap.setView([coords.lat, coords.lon], 14, { animate: true });
 };
 
 window.recenterMap = window.resetMapCenter;
@@ -1234,7 +1273,13 @@ window.switchTab = function(tabId, navBtnEl) {
   if (titleEl) titleEl.textContent = titles[tabId] || 'Home';
 
   if (tabId === 'discover') {
-    setTimeout(resizeMapCanvas, 60);
+    setTimeout(() => {
+      if (!CustomerState.osmMap) {
+        initDiscoveryMap();
+      } else {
+        CustomerState.osmMap.invalidateSize();
+      }
+    }, 80);
   }
 };
 

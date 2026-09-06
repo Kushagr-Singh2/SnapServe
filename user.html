@@ -15,6 +15,9 @@
   <!-- Core & Page CSS -->
   <link rel="stylesheet" href="css/style.css" />
   <link rel="stylesheet" href="css/user.css" />
+  <!-- Leaflet CSS & JS for 100% Free OpenStreetMap -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 </head>
 <body>
 
@@ -253,11 +256,11 @@
           </button>
         </div>
 
-        <!-- Canvas Map Container -->
-        <div class="map-view-container" id="map-container">
+        <!-- OpenStreetMap Container -->
+        <div class="map-view-container" id="map-container" style="position:relative;height:420px;border-radius:20px;overflow:hidden;border:1px solid var(--border-card);background:#0B0D12;">
 
           <!-- Category filter bar overlay -->
-          <div class="map-overlay-top">
+          <div class="map-overlay-top" style="z-index:1000">
             <div class="map-category-bar" id="map-category-bar">
               <button class="map-cat-chip active" onclick="setMapFilter('all', this)">All</button>
               <button class="map-cat-chip" onclick="setMapFilter('electrical', this)">⚡ Electrical</button>
@@ -268,17 +271,17 @@
           </div>
 
           <!-- Floating Map Controls -->
-          <div class="map-controls-floating">
-            <button class="map-btn-floating" onclick="zoomMap(1.2)" aria-label="Zoom In"><i class="fa-solid fa-plus"></i></button>
-            <button class="map-btn-floating" onclick="zoomMap(0.8)" aria-label="Zoom Out"><i class="fa-solid fa-minus"></i></button>
+          <div class="map-controls-floating" style="z-index:1000">
+            <button class="map-btn-floating" onclick="zoomMap(1)" aria-label="Zoom In"><i class="fa-solid fa-plus"></i></button>
+            <button class="map-btn-floating" onclick="zoomMap(-1)" aria-label="Zoom Out"><i class="fa-solid fa-minus"></i></button>
             <button class="map-btn-floating" onclick="recenterMap()" aria-label="Recenter"><i class="fa-solid fa-location-crosshairs"></i></button>
           </div>
 
-          <!-- Canvas -->
-          <canvas id="discovery-map-canvas"></canvas>
+          <!-- Interactive Leaflet OpenStreetMap Container -->
+          <div id="osm-map" style="width:100%;height:100%;min-height:380px;"></div>
 
           <!-- Map Bottom Worker Preview Overlay -->
-          <div class="map-worker-preview" id="map-worker-preview" style="display:none">
+          <div class="map-worker-preview" id="map-worker-preview" style="display:none;z-index:1000">
             <!-- Dynamically populated when worker pin is tapped -->
           </div>
         </div>
