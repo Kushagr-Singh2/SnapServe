@@ -43,9 +43,9 @@
           <div class="user-avatar-btn" id="sidebar-avatar" style="width:38px;height:38px;font-size:13px">U</div>
           <div style="overflow:hidden">
             <div class="sidebar-user-name" id="sidebar-user-name">User</div>
-            <div class="sidebar-user-loc">
+            <div class="sidebar-user-loc" onclick="openLocationModal()" style="cursor:pointer" title="Change Location">
               <i class="fa-solid fa-location-dot" style="color:var(--primary);font-size:9px"></i>
-              <span id="sidebar-user-loc">Connaught Place, New Delhi</span>
+              <span id="sidebar-user-loc">Select Location</span>
             </div>
           </div>
         </div>
@@ -109,9 +109,10 @@
         <div class="topbar-page-title" id="topbar-title">Home</div>
 
         <div class="search-row">
-          <div class="location-chip" id="location-chip">
+          <div class="location-chip" id="location-chip" onclick="openLocationModal()" style="cursor:pointer" title="Click to Change Location">
             <i class="fa-solid fa-location-dot loc-pin"></i>
-            <span class="location-name" id="location-text">Connaught Place, New Delhi</span>
+            <span class="location-name" id="location-text">Select Location</span>
+            <i class="fa-solid fa-chevron-down" style="font-size:9px;color:var(--text-muted);margin-left:2px"></i>
           </div>
 
           <div class="search-wrap">
@@ -150,9 +151,10 @@
           <div class="greeting-banner">
             <div class="greeting-line" id="greeting-line">Welcome,</div>
             <div class="greeting-name" id="greeting-name">Loading...</div>
-            <div class="greeting-sub" id="greeting-sub">
+            <div class="greeting-sub" id="greeting-sub" onclick="openLocationModal()" style="cursor:pointer" title="Click to Change Location">
               <i class="fa-solid fa-location-dot" style="font-size:10px"></i>
-              <span>Connaught Place, New Delhi</span>
+              <span id="greeting-user-loc">Select Location</span>
+              <i class="fa-solid fa-chevron-down" style="font-size:8px;opacity:0.6;margin-left:2px"></i>
             </div>
           </div>
 
@@ -314,7 +316,7 @@
         </div>
 
         <div style="margin-top:var(--space-lg);display:flex;flex-direction:column;gap:10px">
-          <div class="card" style="padding:14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="showToast('Saved Addresses','Connaught Place, New Delhi','info')">
+          <div class="card" style="padding:14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="openLocationModal()">
             <div class="flex items-center gap-md">
               <i class="fa-solid fa-location-dot" style="color:var(--primary);font-size:18px"></i>
               <div>
@@ -506,6 +508,69 @@
       <div id="voice-ai-result" style="display:none"></div>
 
       <button class="btn btn-ghost btn-full" style="margin-top:var(--space-md);color:var(--text-muted);font-size:var(--text-sm)" onclick="closeVoiceModal()">
+        Cancel
+      </button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       LOCATION PICKER MODAL OVERLAY
+  ══════════════════════════════════════════════════════════ -->
+  <div class="modal-backdrop" id="location-modal" role="dialog" aria-modal="true" aria-label="Select Location">
+    <div class="modal-inner" id="location-modal-inner" style="max-width:440px;text-align:left;">
+      <div class="modal-handle" aria-hidden="true"></div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+        <h3 style="font-size:18px;font-weight:800;color:#fff;display:flex;align-items:center;gap:8px;margin:0;">
+          <i class="fa-solid fa-location-dot" style="color:var(--primary)"></i> Select Location
+        </h3>
+        <button type="button" class="btn btn-ghost btn-sm" onclick="closeLocationModal()" style="border-radius:50%;width:32px;height:32px;padding:0;display:flex;align-items:center;justify-content:center;">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:16px;">
+        Share your location to discover verified workers nearby in real time.
+      </p>
+
+      <!-- GPS Detection Button -->
+      <button type="button" class="btn btn-primary btn-full" id="btn-detect-loc" onclick="detectCurrentLocation(true)" style="padding:14px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:13px;font-weight:700;margin-bottom:18px;">
+        <i class="fa-solid fa-location-crosshairs"></i> Use Current Location (GPS)
+      </button>
+
+      <!-- Manual Input -->
+      <div style="margin-bottom:18px;">
+        <label style="display:block;font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-bottom:6px;letter-spacing:0.05em">
+          Or Enter Area / Neighborhood
+        </label>
+        <div style="display:flex;gap:6px;">
+          <input type="text" id="manual-loc-input" placeholder="e.g. Indiranagar, Bengaluru or Bandra, Mumbai" 
+            style="flex:1;background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:10px 14px;color:#fff;font-size:13px;"
+            onkeydown="if(event.key==='Enter') applyManualLocation()" />
+          <button type="button" class="btn btn-secondary btn-sm" onclick="applyManualLocation()" style="padding:10px 16px;">
+            Set
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick City Chips -->
+      <div>
+        <label style="display:block;font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-bottom:8px;letter-spacing:0.05em">
+          Popular Hubs
+        </label>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;" id="popular-loc-chips">
+          <button type="button" class="btn btn-ghost btn-sm" onclick="selectPresetLocation('Connaught Place, New Delhi')" style="font-size:11px;padding:6px 12px;border-radius:20px;background:rgba(255,255,255,0.05);color:#fff">📍 Connaught Place, Delhi</button>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="selectPresetLocation('South Extension, New Delhi')" style="font-size:11px;padding:6px 12px;border-radius:20px;background:rgba(255,255,255,0.05);color:#fff">📍 South Ext, Delhi</button>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="selectPresetLocation('Noida Sector 62, NCR')" style="font-size:11px;padding:6px 12px;border-radius:20px;background:rgba(255,255,255,0.05);color:#fff">📍 Noida Sec 62</button>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="selectPresetLocation('Cyber City, Gurugram')" style="font-size:11px;padding:6px 12px;border-radius:20px;background:rgba(255,255,255,0.05);color:#fff">📍 Cyber City, Gurugram</button>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="selectPresetLocation('Koramangala, Bengaluru')" style="font-size:11px;padding:6px 12px;border-radius:20px;background:rgba(255,255,255,0.05);color:#fff">📍 Koramangala, Bengaluru</button>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="selectPresetLocation('Bandra West, Mumbai')" style="font-size:11px;padding:6px 12px;border-radius:20px;background:rgba(255,255,255,0.05);color:#fff">📍 Bandra West, Mumbai</button>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="selectPresetLocation('Hitec City, Hyderabad')" style="font-size:11px;padding:6px 12px;border-radius:20px;background:rgba(255,255,255,0.05);color:#fff">📍 Hitec City, Hyderabad</button>
+          <button type="button" class="btn btn-ghost btn-sm" onclick="selectPresetLocation('Kothrud, Pune')" style="font-size:11px;padding:6px 12px;border-radius:20px;background:rgba(255,255,255,0.05);color:#fff">📍 Kothrud, Pune</button>
+        </div>
+      </div>
+
+      <button type="button" class="btn btn-ghost btn-full" style="margin-top:16px;color:var(--text-muted);font-size:var(--text-sm)" onclick="closeLocationModal()">
         Cancel
       </button>
     </div>

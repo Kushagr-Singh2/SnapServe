@@ -45,6 +45,7 @@ if (fs.existsSync(envPath)) {
 }
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
+const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY || '';
 const PORT = process.env.PORT || 3000;
 const DATA_FILE = process.env.VERCEL
   ? path.join('/tmp', 'platform_data.json')
@@ -138,6 +139,11 @@ app.get('/', (req, res) => {
   if (fs.existsSync(publicIndex)) return res.sendFile(publicIndex);
   if (fs.existsSync(rootIndex))   return res.sendFile(rootIndex);
   res.send('SnapServe is running');
+});
+
+// Maps Config API
+app.get('/api/config/maps', (req, res) => {
+  res.json({ apiKey: GOOGLE_MAPS_API_KEY });
 });
 
 // ══════════════════════════════════════════════════════════════

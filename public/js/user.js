@@ -11,6 +11,8 @@ const CustomerState = {
   activeMapFilter: 'all',
   selectedWorkerId: null,
   searchQuery: '',
+  currentLocation: localStorage.getItem('snapserve_user_loc') || 'Select Location',
+  coords: null,
   workers: [],
   requests: [],
   map: {
@@ -33,6 +35,7 @@ async function initCustomerPage() {
     return;
   }
 
+  initLocationService();
   renderUserHeader();
   renderUserProfileTab();
   await loadCustomerDataFromServer();
@@ -98,10 +101,219 @@ function renderUserHeader() {
 
   if (lineEl) lineEl.textContent = greeting + ',';
   if (nameEl) nameEl.textContent = user.name + ' 👋';
-  if (subEl)  subEl.innerHTML = `<i class="fa-solid fa-location-dot" style="color:var(--primary);font-size:10px"></i> <span>Connaught Place, New Delhi</span>`;
+  
+  const curLoc = CustomerState.currentLocation || localStorage.getItem('snapserve_user_loc') || 'Select Location';
+  if (subEl)  subEl.innerHTML = `<i class="fa-solid fa-location-dot" style="color:var(--primary);font-size:10px"></i> <span id="greeting-user-loc">${curLoc}</span> <i class="fa-solid fa-chevron-down" style="font-size:8px;opacity:0.6;margin-left:2px"></i>`;
 
   const sbName = document.getElementById('sidebar-user-name');
   if (sbName) sbName.textContent = user.name;
+  const sbLoc = document.getElementById('sidebar-user-loc');
+  if (sbLoc) sbLoc.textContent = curLoc;
+  const topLoc = document.getElementById('location-text');
+  if (topLoc) topLoc.textContent = curLoc;
+}
+
+// ── Location Management & Geolocation ────────────────────────────────
+window.initLocationService = function() {
+  const saved = localStorage.getItem('snapserve_user_loc');
+  if (saved && saved !== 'Select Location') {
+    CustomerState.currentLocation = saved;
+    updateLocationUI(saved);
+  } else {
+    CustomerState.currentLocation = 'Select Location';
+    updateLocationUI('Select Location');
+    // Prompt browser for location
+    detectCurrentLocation(false);
+  }
+
+  // Check if server provides a Google Maps API Key
+  fetch('/api/config/maps')
+    .then(r => r.json())
+    .then(data => {
+      if (data && data.apiKey) {
+        window.GOOGLE_MAPS_API_KEY = data.apiKey;
+        loadGoogleMapsScript(data.apiKey);
+      }
+    })
+    .catch(() => {});
+};
+
+function loadGoogleMapsScript(apiKey) {
+  if (document.getElementById('google-maps-sdk')) return;
+  const script = document.createElement('script');
+  script.id = 'google-maps-sdk';
+  script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
+  script.async = true;
+  script.defer = true;
+  document.head.appendChild(script);
+}
+
+function updateLocationUI(locName) {
+  CustomerState.currentLocation = locName;
+
+  const locText = document.getElementById('location-text');
+  if (locText) locText.textContent = locName;
+
+  const sideLoc = document.getElementById('sidebar-user-loc');
+  if (sideLoc) sideLoc.textContent = locName;
+
+  const greetLoc = document.getElementById('greeting-user-loc');
+  if (greetLoc) greetLoc.textContent = locName;
+
+  if (CustomerState.map && CustomerState.map.canvas) {
+    drawDiscoveryMap();
+  }
+}
+
+window.openLocationModal = function() {
+  const modal = document.getElementById('location-modal');
+  if (modal) modal.classList.add('open');
+};
+
+window.closeLocationModal = function() {
+  const modal = document.getElementById('location-modal');
+  if (modal) modal.classList.remove('open');
+};
+
+window.selectPresetLocation = function(locName) {
+  localStorage.setItem('snapserve_user_loc', locName);
+  updateLocationUI(locName);
+  closeLocationModal();
+  if (window.showToast) showToast('Location Updated', `Set to ${locName}`, 'success');
+};
+
+window.applyManualLocation = function() {
+  const input = document.getElementById('manual-loc-input');
+  if (!input || !input.value.trim()) return;
+  const val = input.value.trim();
+  localStorage.setItem('snapserve_user_loc', val);
+  updateLocationUI(val);
+  closeLocationModal();
+  input.value = '';
+  if (window.showToast) showToast('Location Updated', `Set to ${val}`, 'success');
+};
+
+window.detectCurrentLocation = function(userTriggered = false) {
+  const btn = document.getElementById('btn-detect-loc');
+  if (userTriggered && btn) {
+    btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Detecting GPS...`;
+    btn.disabled = true;
+  }
+
+  if (!navigator.geolocation) {
+    if (userTriggered) {
+      alert('Geolocation is not supported by your browser. Please type your location.');
+      if (btn) {
+        btn.innerHTML = `<i class="fa-solid fa-location-crosshairs"></i> Use Current Location (GPS)`;
+        btn.disabled = false;
+      }
+    }
+    updateLocationUI('Select Location');
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    async (position) => {
+      const { latitude, longitude } = position.coords;
+      CustomerState.coords = { lat: latitude, lon: longitude };
+
+      try {
+        const locName = await reverseGeocode(latitude, longitude);
+        localStorage.setItem('snapserve_user_loc', locName);
+        updateLocationUI(locName);
+        if (userTriggered) {
+          closeLocationModal();
+          if (window.showToast) showToast('Location Detected', locName, 'success');
+        }
+      } catch (err) {
+        console.warn('Reverse geocode error:', err);
+        const fallbackName = `Lat: ${latitude.toFixed(2)}, Lon: ${longitude.toFixed(2)}`;
+        localStorage.setItem('snapserve_user_loc', fallbackName);
+        updateLocationUI(fallbackName);
+        if (userTriggered) closeLocationModal();
+      } finally {
+        if (btn) {
+          btn.innerHTML = `<i class="fa-solid fa-location-crosshairs"></i> Use Current Location (GPS)`;
+          btn.disabled = false;
+        }
+      }
+    },
+    (error) => {
+      console.warn('Geolocation denied or failed:', error.code, error.message);
+      if (btn) {
+        btn.innerHTML = `<i class="fa-solid fa-location-crosshairs"></i> Use Current Location (GPS)`;
+        btn.disabled = false;
+      }
+      const saved = localStorage.getItem('snapserve_user_loc');
+      if (!saved || saved === 'Select Location') {
+        updateLocationUI('Select Location');
+      }
+      if (userTriggered) {
+        alert('Location access was not allowed. You can select your city or type your area below.');
+      }
+    },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+  );
+};
+
+async function reverseGeocode(lat, lon) {
+  // 1. Google Maps Geocoding API if key configured
+  const googleKey = window.GOOGLE_MAPS_API_KEY;
+  if (googleKey) {
+    try {
+      const gUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lon}&key=${googleKey}`;
+      const res = await fetch(gUrl);
+      const data = await res.json();
+      if (data.results && data.results.length > 0) {
+        const comp = data.results[0].address_components || [];
+        const sub = comp.find(c => c.types.includes('sublocality') || c.types.includes('neighborhood'))?.long_name;
+        const loc = comp.find(c => c.types.includes('locality'))?.long_name;
+        const adm = comp.find(c => c.types.includes('administrative_area_level_2'))?.long_name;
+        if (sub && loc) return `${sub}, ${loc}`;
+        if (sub && adm) return `${sub}, ${adm}`;
+        if (loc) return loc;
+        return data.results[0].formatted_address.split(',').slice(0, 2).join(',').trim();
+      }
+    } catch (e) {
+      console.warn('Google geocoding error:', e);
+    }
+  }
+
+  // 2. High-precision client-side reverse geocoding via BigDataCloud (Free, no key required)
+  try {
+    const bdcUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`;
+    const res = await fetch(bdcUrl);
+    if (res.ok) {
+      const data = await res.json();
+      const area = data.locality || data.principalSubdivision;
+      const city = data.city || data.principalSubdivision || data.countryName;
+      if (area && city && area !== city) return `${area}, ${city}`;
+      if (area) return area;
+      if (city) return city;
+    }
+  } catch (e) {
+    console.warn('BigDataCloud geocode error:', e);
+  }
+
+  // 3. OpenStreetMap Nominatim Fallback
+  try {
+    const osmUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=14&addressdetails=1`;
+    const res = await fetch(osmUrl, { headers: { 'Accept': 'application/json' } });
+    if (res.ok) {
+      const data = await res.json();
+      const addr = data.address || {};
+      const sub = addr.suburb || addr.neighbourhood || addr.residential || addr.subdistrict;
+      const city = addr.city || addr.town || addr.state_district || addr.state;
+      if (sub && city) return `${sub}, ${city}`;
+      if (sub) return sub;
+      if (city) return city;
+      if (data.display_name) return data.display_name.split(',').slice(0, 2).join(',').trim();
+    }
+  } catch (e) {
+    console.warn('Nominatim geocode error:', e);
+  }
+
+  return `Current Location (${lat.toFixed(2)}, ${lon.toFixed(2)})`;
 }
 
 // ── Services & Category Discovery ────────────────────────────────────
@@ -725,7 +937,10 @@ function drawDiscoveryMap() {
   ctx.fillStyle = '#FFFFFF';
   ctx.font = 'bold 11px sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('YOU ARE HERE', cx, cy - 14 * zoom);
+  const mapLabel = (CustomerState.currentLocation && CustomerState.currentLocation !== 'Select Location')
+    ? CustomerState.currentLocation
+    : 'YOU ARE HERE';
+  ctx.fillText(mapLabel.length > 25 ? mapLabel.slice(0, 25) + '...' : mapLabel, cx, cy - 14 * zoom);
 
   // Empty state if no pins
   if (CustomerState.map.workerPins.length === 0) {
@@ -926,8 +1141,8 @@ function renderUserProfileTab() {
       </div>
       <h2 style="font-size:22px;font-weight:800;color:#fff;margin-bottom:2px">${name}</h2>
       <div style="font-size:12px;color:var(--primary-light);font-weight:600;margin-bottom:12px">👤 Customer Account</div>
-      <div style="display:inline-block;padding:4px 12px;background:rgba(255,255,255,0.05);border-radius:12px;font-size:11px;color:var(--text-muted)">
-        📍 Connaught Place, New Delhi · Active Demo Session
+      <div style="display:inline-block;padding:4px 12px;background:rgba(255,255,255,0.05);border-radius:12px;font-size:11px;color:var(--text-muted);cursor:pointer" onclick="openLocationModal()" title="Change location">
+        📍 ${CustomerState.currentLocation || 'Select Location'} · Active Session
       </div>
     </div>
   `;
