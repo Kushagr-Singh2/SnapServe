@@ -445,7 +445,6 @@
     <div class="nav-links">
       <a class="nav-link" href="#services">Services</a>
       <a class="nav-link" href="#how">How it Works</a>
-      <a class="nav-link" href="#features">Features</a>
       <a class="nav-link" href="#cooperative">Cooperative</a>
     </div>
 
@@ -478,42 +477,16 @@
     </p>
 
     <div class="hero-ctas">
-      <a href="login.html" class="hero-cta-primary" id="cta-customer">
-        <i class="fa-solid fa-bolt"></i>
-        Start Hackathon Demo →
+      <a href="login.html?role=customer" class="hero-cta-primary" id="cta-customer">
+        <i class="fa-solid fa-user"></i>
+        Login as Customer →
       </a>
-      <a href="login.html" class="hero-cta-secondary" id="cta-worker">
-        <i class="fa-solid fa-user-shield"></i>
-        Choose Role & Login
+      <a href="login.html?role=worker" class="hero-cta-secondary" id="cta-worker">
+        <i class="fa-solid fa-helmet-safety"></i>
+        Login as Worker →
       </a>
-    </div>
-
-    <!-- Scroll Hint -->
-    <div class="scroll-hint" aria-hidden="true">
-      <span>SCROLL</span>
-      <i class="fa-solid fa-chevron-down scroll-arrow"></i>
     </div>
   </section>
-
-  <!-- ── STATS BAR ──────────────────────────────────────────── -->
-  <div class="stats-bar" role="region" aria-label="Platform Highlights">
-    <div class="stat-bar-item">
-      <div class="stat-bar-val">100%</div>
-      <div class="stat-bar-lbl">Hyperlocal & Direct</div>
-    </div>
-    <div class="stat-bar-item">
-      <div class="stat-bar-val">Verified</div>
-      <div class="stat-bar-lbl">Admin-Approved Pros</div>
-    </div>
-    <div class="stat-bar-item">
-      <div class="stat-bar-val">Live Sync</div>
-      <div class="stat-bar-lbl">Real-Time Negotiation</div>
-    </div>
-    <div class="stat-bar-item">
-      <div class="stat-bar-val">AI Voice</div>
-      <div class="stat-bar-lbl">Hindi & English</div>
-    </div>
-  </div>
 
   <!-- ── SERVICES ───────────────────────────────────────────── -->
   <section class="services-section" id="services" aria-labelledby="services-heading">
@@ -578,51 +551,6 @@
     </div>
   </section>
 
-  <!-- ── FEATURES ───────────────────────────────────────────── -->
-  <section class="features-section" id="features" aria-labelledby="features-heading">
-    <div class="section-wrap">
-      <div class="section-eyebrow">Why SnapServe</div>
-      <h2 class="section-heading" id="features-heading">
-        Built Different
-      </h2>
-      <p class="section-desc">
-        We're not just another services app. We've reimagined how local home services should work.
-      </p>
-
-      <div class="features-grid">
-        <div class="feature-card">
-          <div class="feature-icon-wrap">🎙️</div>
-          <div class="feature-title">Multilingual Voice AI</div>
-          <div class="feature-desc">Book in Hindi, English, or Hinglish. Gemini AI understands context, urgency, and intent — not just keywords.</div>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon-wrap">📍</div>
-          <div class="feature-title">Hyperlocal Discovery</div>
-          <div class="feature-desc">See workers near you on a live map with real-time distance, ETA, and availability — just like Uber.</div>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon-wrap">💰</div>
-          <div class="feature-title">Transparent Negotiation</div>
-          <div class="feature-desc">No platform-set prices. You negotiate directly with the worker for a fair price. Zero hidden fees.</div>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon-wrap">🤝</div>
-          <div class="feature-title">Cooperative Model</div>
-          <div class="feature-desc">Workers own their earnings. They're part of a local cooperative — not gig workers being exploited.</div>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon-wrap">🛡️</div>
-          <div class="feature-title">Verified & Trusted</div>
-          <div class="feature-desc">Every worker is background-checked and skill-verified. Read real reviews from your neighbours.</div>
-        </div>
-        <div class="feature-card">
-          <div class="feature-icon-wrap">⚡</div>
-          <div class="feature-title">60-Second Booking</div>
-          <div class="feature-desc">From speaking your problem to a worker accepting your job — in under 60 seconds, guaranteed.</div>
-        </div>
-      </div>
-    </div>
-  </section>
 
   <!-- ── COOPERATIVE ────────────────────────────────────────── -->
   <section class="coop-section" id="cooperative" aria-labelledby="coop-heading">
@@ -759,14 +687,14 @@
     if (ctaCust) {
       ctaCust.addEventListener('click', (e) => {
         e.preventDefault();
-        window.location.href = 'login.html';
+        window.location.href = 'login.html?role=customer';
       });
     }
     const ctaWrk = document.getElementById('cta-worker');
     if (ctaWrk) {
       ctaWrk.addEventListener('click', (e) => {
         e.preventDefault();
-        window.location.href = 'login.html';
+        window.location.href = 'login.html?role=worker';
       });
     }
   </script>

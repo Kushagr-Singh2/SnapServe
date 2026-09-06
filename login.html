@@ -230,6 +230,16 @@
       cardEl.classList.add('active');
     }
 
+    document.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const roleParam = urlParams.get('role');
+      if (roleParam) {
+        const targetRole = (roleParam === 'user' || roleParam === 'customer') ? 'customer' : roleParam;
+        const card = document.querySelector(`.role-card[data-role="${targetRole}"]`);
+        if (card) selectRole(targetRole, card);
+      }
+    });
+
     async function handleLogin(e) {
       e.preventDefault();
       const nameInput = document.getElementById('login-name').value.trim();
