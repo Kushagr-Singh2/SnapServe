@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SnapServe — Admin Dashboard</title>
+  <meta name="description" content="SnapServe admin panel. Monitor users, workers, bookings, and negotiations." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/admin.css" />
+</head>
+<body>
+
+  <!-- ── Admin Layout ────────────────────────────────────────── -->
+  <div class="admin-layout page-wrapper">
+
+    <!-- ── Sidebar ──────────────────────────────────────────── -->
+    <aside class="admin-sidebar" id="admin-sidebar" role="navigation" aria-label="Admin navigation">
+
+      <!-- Logo -->
+      <div class="sidebar-logo">
+        <div class="logo-mark">
+          <img src="logo.jpg" alt="SnapServe" class="sidebar-logo-img" />
+        </div>
+        <span class="logo-sub" style="margin-top:6px;display:block;padding-left:4px">Admin Console</span>
+      </div>
+
+      <!-- Navigation -->
+      <nav class="sidebar-nav" role="menubar">
+
+        <div class="nav-group-label">Overview</div>
+
+        <a class="sidebar-nav-item active" data-section="dashboard" href="#" role="menuitem"
+           aria-current="page" tabindex="0">
+          <i class="fa-solid fa-chart-line" aria-hidden="true" style="width:16px"></i>
+          Dashboard
+        </a>
+
+        <div class="nav-group-label">Management</div>
+
+        <a class="sidebar-nav-item" data-section="users" href="#" role="menuitem" tabindex="0">
+          <i class="fa-solid fa-users" aria-hidden="true" style="width:16px"></i>
+          Users
+          <span class="nav-badge" id="snav-users-count">0</span>
+        </a>
+
+        <a class="sidebar-nav-item" data-section="workers" href="#" role="menuitem" tabindex="0">
+          <i class="fa-solid fa-screwdriver-wrench" aria-hidden="true" style="width:16px"></i>
+          Workers
+          <span class="nav-badge" id="snav-workers-count" style="background:var(--warning)">0</span>
+        </a>
+
+        <a class="sidebar-nav-item" data-section="bookings" href="#" role="menuitem" tabindex="0">
+          <i class="fa-solid fa-calendar-check" aria-hidden="true" style="width:16px"></i>
+          Bookings
+          <span class="nav-badge" id="snav-bookings-count">0</span>
+        </a>
+
+        <a class="sidebar-nav-item" data-section="services" href="#" role="menuitem" tabindex="0">
+          <i class="fa-solid fa-briefcase" aria-hidden="true" style="width:16px"></i>
+          Services
+        </a>
+
+        <div class="nav-group-label">Insights</div>
+
+        <a class="sidebar-nav-item" data-section="negotiations" href="#" role="menuitem" tabindex="0">
+          <i class="fa-solid fa-handshake" aria-hidden="true" style="width:16px"></i>
+          Negotiations
+        </a>
+
+        <a class="sidebar-nav-item" data-section="analytics" href="#" role="menuitem" tabindex="0">
+          <i class="fa-solid fa-chart-bar" aria-hidden="true" style="width:16px"></i>
+          Analytics
+        </a>
+
+      </nav>
+
+      <!-- Admin Profile Footer -->
+      <div class="sidebar-footer">
+        <div class="admin-profile-chip" role="button" tabindex="0" aria-label="Admin profile">
+          <div class="avatar" style="background:var(--gradient-accent)">A</div>
+          <div class="admin-profile-info">
+            <div class="admin-profile-name" id="sidebar-admin-name">Admin</div>
+            <div class="admin-profile-role">platform control</div>
+          </div>
+          <i class="fa-solid fa-ellipsis-vertical" style="color:var(--text-muted);font-size:12px" aria-hidden="true"></i>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- Mobile Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebar-overlay" role="presentation" aria-hidden="true"></div>
+
+    <!-- ── Main Content ──────────────────────────────────────── -->
+    <div class="admin-main" role="main">
+
+      <!-- Top Bar -->
+      <header class="admin-topbar" role="banner">
+        <button class="btn-icon" id="sidebar-toggle" aria-label="Toggle sidebar" style="display:none">
+          <i class="fa-solid fa-bars" aria-hidden="true"></i>
+        </button>
+        <div>
+          <div class="topbar-page-title" id="topbar-title">Dashboard</div>
+          <div class="topbar-breadcrumb">SnapServe / <span id="topbar-page">Overview</span></div>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn-icon" aria-label="Notifications" style="position:relative">
+            <i class="fa-regular fa-bell" aria-hidden="true"></i>
+            <span id="admin-notif-dot" style="position:absolute;top:6px;right:6px;width:8px;height:8px;background:var(--accent);border-radius:50%;border:2px solid var(--bg-dark);display:none" aria-hidden="true"></span>
+          </button>
+          <a href="login.html" class="btn btn-ghost btn-sm" style="padding:8px 12px">
+            <i class="fa-solid fa-arrow-right-from-bracket" aria-hidden="true"></i>
+            Logout
+          </a>
+        </div>
+      </header>
+
+      <!-- Content Area -->
+      <div class="admin-content">
+
+        <!-- ══ DASHBOARD SECTION ═══════════════════════════ -->
+        <div data-admin-section="dashboard">
+
+          <div style="margin-bottom:var(--space-xl)">
+            <h1 id="admin-greeting-heading" style="font-size:var(--text-2xl);font-weight:800;margin-bottom:4px">
+              Welcome back, Admin 👋
+            </h1>
+            <p style="color:var(--text-muted);font-size:var(--text-sm)">
+              Live overview of SnapServe verification requests, bookings, and active negotiations.
+            </p>
+          </div>
+
+          <!-- Stats Grid -->
+          <div class="admin-stats-grid" role="list" aria-label="Dashboard statistics">
+
+            <div class="admin-stat-card card-warning" role="listitem">
+              <div class="stat-card-icon bg-warning" aria-hidden="true">
+                <i class="fa-solid fa-clock" style="color:var(--warning)"></i>
+              </div>
+              <div class="stat-card-value" id="stat-pending-workers">0</div>
+              <div class="stat-card-label">Pending Verifications</div>
+              <div class="stat-card-change" id="stat-pending-sub">Awaiting Admin Action</div>
+            </div>
+
+            <div class="admin-stat-card card-success" role="listitem">
+              <div class="stat-card-icon bg-success" aria-hidden="true">
+                <i class="fa-solid fa-circle-check" style="color:var(--success)"></i>
+              </div>
+              <div class="stat-card-value" id="stat-verified-workers">0</div>
+              <div class="stat-card-label">Verified Workers</div>
+              <div class="stat-card-change" id="stat-verified-sub">Live on Platform</div>
+            </div>
+
+            <div class="admin-stat-card card-primary" role="listitem">
+              <div class="stat-card-icon bg-primary" aria-hidden="true">
+                <i class="fa-solid fa-handshake" style="color:var(--primary-light)"></i>
+              </div>
+              <div class="stat-card-value" id="stat-active-requests">0</div>
+              <div class="stat-card-label">Active Requests</div>
+              <div class="stat-card-change" id="stat-active-sub">In Negotiation / Progress</div>
+            </div>
+
+            <div class="admin-stat-card card-accent" role="listitem">
+              <div class="stat-card-icon bg-success" aria-hidden="true">
+                <i class="fa-solid fa-calendar-check" style="color:var(--success)"></i>
+              </div>
+              <div class="stat-card-value" id="stat-completed-bookings">0</div>
+              <div class="stat-card-label">Completed Bookings</div>
+              <div class="stat-card-change" id="stat-completed-sub">Platform Transactions</div>
+            </div>
+
+          </div>
+
+
+          </div>
+
+          <!-- Live Activity Stream Card -->
+          <div style="background:var(--bg-glass);border:1px solid var(--border-card);border-radius:20px;padding:20px;margin-bottom:var(--space-xl);backdrop-filter:blur(16px)">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border-subtle)">
+              <div style="font-weight:800;font-size:16px;color:#fff">⚡ Live Platform Activity Stream</div>
+              <span class="badge badge-success" style="font-size:10px">
+                <span style="width:5px;height:5px;background:var(--success);border-radius:50%;display:inline-block;animation:pulse 2s infinite;margin-right:4px"></span>
+                Real-Time Shared State Sync
+              </span>
+            </div>
+            <div id="admin-activity-feed">
+              <!-- Dynamically populated by admin.js -->
+            </div>
+          </div>
+
+          <!-- Charts Row -->
+          <div style="display:grid;grid-template-columns:1fr 340px;gap:var(--space-lg);margin-bottom:var(--space-xl)">
+
+            <!-- Weekly Bookings Bar Chart -->
+            <div class="chart-card">
+              <div class="chart-header">
+                <div class="chart-title">Weekly Bookings</div>
+                <div class="chart-subtitle">Last 7 days performance</div>
+              </div>
+              <div class="chart-area" id="booking-chart" role="img" aria-label="Weekly bookings bar chart">
+                <!-- Rendered by admin.js -->
+              </div>
+            </div>
+
+            <!-- Service Breakdown Donut -->
+            <div class="chart-card">
+              <div class="chart-header">
+                <div class="chart-title">Service Breakdown</div>
+                <div class="chart-subtitle">By category</div>
+              </div>
+              <div class="donut-wrap" style="flex-direction:column;align-items:center;gap:var(--space-md)">
+                <canvas id="service-chart" width="200" height="200" role="img" aria-label="Service breakdown donut chart"></canvas>
+                <div class="donut-legend" id="donut-legend">
+                  <!-- Rendered inline -->
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Recent Bookings Table -->
+          <div class="admin-table-wrap" style="margin-bottom:var(--space-xl)">
+            <div class="admin-table-header">
+              <div class="admin-table-title">Recent Bookings</div>
+              <button class="btn btn-sm btn-ghost" style="margin-left:auto"
+                onclick="showAdminSection('bookings');document.querySelector('[data-section=bookings]').classList.add('active')">
+                View All
+              </button>
+            </div>
+            <div style="overflow-x:auto">
+              <table class="admin-table" aria-label="Recent bookings">
+                <thead>
+                  <tr>
+                    <th scope="col">Customer</th>
+                    <th scope="col">Worker</th>
+                    <th scope="col">Service</th>
+                    <th scope="col">Price</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Time</th>
+                  </tr>
+                </thead>
+                <tbody id="bookings-tbody">
+                  <!-- Rendered by admin.js -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div><!-- /dashboard section -->
+
+        <!-- ══ USERS SECTION ════════════════════════════════ -->
+        <div data-admin-section="users" style="display:none">
+          <h2 style="font-size:var(--text-2xl);font-weight:800;margin-bottom:var(--space-xl)">User Management</h2>
+          <div class="admin-table-wrap">
+            <div class="admin-table-header">
+              <div class="admin-table-title">All Users</div>
+              <input type="search" class="input" style="max-width:200px;padding:8px 12px;font-size:13px" placeholder="Search users..." aria-label="Search users" />
+            </div>
+            <div style="overflow-x:auto">
+              <table class="admin-table" aria-label="All users">
+                <thead>
+                  <tr>
+                    <th scope="col">User</th>
+                    <th scope="col">Phone</th>
+                    <th scope="col">Location</th>
+                    <th scope="col">Bookings</th>
+                    <th scope="col">Joined</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- Render all users -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══ WORKERS SECTION ══════════════════════════════ -->
+        <div data-admin-section="workers" style="display:none">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-lg);flex-wrap:wrap;gap:12px">
+            <div>
+              <h2 style="font-size:var(--text-2xl);font-weight:800;margin-bottom:4px">Worker Verification & Profiles</h2>
+              <p style="font-size:13px;color:var(--text-muted)">Review applications, verify worker details, and approve to make visible to customers.</p>
+            </div>
+            <!-- Verification Filter Tabs -->
+            <div class="filter-pills-bar" id="worker-verification-tabs" style="margin:0">
+              <button class="filter-pill active" onclick="filterAdminWorkers('pending', this)">🟡 Pending (<span id="tab-pending-count">0</span>)</button>
+              <button class="filter-pill" onclick="filterAdminWorkers('approved', this)">🟢 Approved (<span id="tab-approved-count">0</span>)</button>
+              <button class="filter-pill" onclick="filterAdminWorkers('rejected', this)">🔴 Rejected (<span id="tab-rejected-count">0</span>)</button>
+              <button class="filter-pill" onclick="filterAdminWorkers('all', this)">All Workers (<span id="tab-all-count">0</span>)</button>
+            </div>
+          </div>
+
+          <div class="admin-table-wrap">
+            <div style="overflow-x:auto">
+              <table class="admin-table" aria-label="Worker verification applications">
+                <thead>
+                  <tr>
+                    <th scope="col">Worker</th>
+                    <th scope="col">Location</th>
+                    <th scope="col">Experience & Bio</th>
+                    <th scope="col">Services & Base Pricing</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Admin Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="workers-tbody">
+                  <!-- Rendered by admin.js -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══ BOOKINGS SECTION ═════════════════════════════ -->
+        <div data-admin-section="bookings" style="display:none">
+          <h2 style="font-size:var(--text-2xl);font-weight:800;margin-bottom:var(--space-xl)">Booking Management & Transaction Lifecycle</h2>
+          <div class="admin-table-wrap">
+            <div class="admin-table-header">
+              <div class="admin-table-title">All Customer Bookings</div>
+              <div class="flex gap-sm" style="margin-left:auto;flex-wrap:wrap">
+                <span class="badge badge-warning">Requested</span>
+                <span class="badge badge-primary">Negotiating</span>
+                <span class="badge badge-success">Completed</span>
+              </div>
+            </div>
+            <div style="overflow-x:auto">
+              <table class="admin-table" aria-label="All bookings">
+                <thead>
+                  <tr>
+                    <th scope="col">Customer</th>
+                    <th scope="col">Worker</th>
+                    <th scope="col">Service</th>
+                    <th scope="col">Price</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Time</th>
+                  </tr>
+                </thead>
+                <tbody id="all-bookings-tbody">
+                  <!-- Rendered by admin.js -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══ SERVICES SECTION ═════════════════════════════ -->
+        <div data-admin-section="services" style="display:none">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-xl)">
+            <h2 style="font-size:var(--text-2xl);font-weight:800">Platform Services Management</h2>
+            <button class="btn btn-primary btn-sm" onclick="showToast('Add Category','Category creation active in admin','info')">
+              + Add Category
+            </button>
+          </div>
+          <div id="admin-services-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:var(--space-lg)">
+            <!-- Rendered by admin.js -->
+          </div>
+        </div>
+
+        <!-- ══ NEGOTIATIONS SECTION ═════════════════════════ -->
+        <div data-admin-section="negotiations" style="display:none">
+          <h2 style="font-size:var(--text-2xl);font-weight:800;margin-bottom:var(--space-xl)">Negotiation Monitoring</h2>
+          <div style="margin-bottom:var(--space-md);padding:var(--space-md);background:rgba(108,99,255,0.08);border:1px solid rgba(108,99,255,0.15);border-radius:var(--radius-lg)">
+            <div style="font-size:var(--text-sm);color:var(--primary-light)">
+              💡 Transparency feature: Monitor all price negotiations between customers and workers in real-time.
+            </div>
+          </div>
+          <div class="admin-table-wrap">
+            <div class="admin-table-header">
+              <div class="admin-table-title">All Negotiations</div>
+              <div style="margin-left:auto;font-size:var(--text-xs);color:var(--text-muted)">
+                Avg. discount: <strong style="color:var(--warning)">11.4%</strong>
+              </div>
+            </div>
+            <div style="overflow-x:auto">
+              <table class="admin-table" aria-label="All negotiations">
+                <thead>
+                  <tr>
+                    <th scope="col">Service</th>
+                    <th scope="col">Base Price</th>
+                    <th scope="col">Customer Offer</th>
+                    <th scope="col">Worker Counter</th>
+                    <th scope="col">Final Price</th>
+                    <th scope="col">Rounds</th>
+                    <th scope="col">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="negotiations-tbody">
+                  <!-- Rendered by admin.js -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══ ANALYTICS SECTION ════════════════════════════ -->
+        <div data-admin-section="analytics" style="display:none">
+          <h2 style="font-size:var(--text-2xl);font-weight:800;margin-bottom:var(--space-xl)">Analytics</h2>
+
+          <!-- Key Metrics -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:var(--space-md);margin-bottom:var(--space-xl)">
+            <div class="admin-stat-card card-primary">
+              <div class="stat-card-value" style="font-size:var(--text-2xl)">11.4%</div>
+              <div class="stat-card-label">Avg. Negotiated Discount</div>
+            </div>
+            <div class="admin-stat-card card-success">
+              <div class="stat-card-value" style="font-size:var(--text-2xl)">87%</div>
+              <div class="stat-card-label">Negotiation Success Rate</div>
+            </div>
+            <div class="admin-stat-card card-warning">
+              <div class="stat-card-value" style="font-size:var(--text-2xl)">8 min</div>
+              <div class="stat-card-label">Avg. Response Time</div>
+            </div>
+            <div class="admin-stat-card card-accent">
+              <div class="stat-card-value" style="font-size:var(--text-2xl)">4.8</div>
+              <div class="stat-card-label">Avg. Worker Rating</div>
+            </div>
+          </div>
+
+          <!-- Top Locations -->
+          <div class="chart-card" style="margin-bottom:var(--space-lg)">
+            <div class="chart-header">
+              <div class="chart-title">High-Demand Locations</div>
+              <div class="chart-subtitle">Bookings by area</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:var(--space-sm)">
+              <!-- Rendered from analytics data -->
+            </div>
+          </div>
+
+          <!-- Charts placeholder -->
+          <div style="text-align:center;padding:40px;background:var(--bg-glass);border:1px dashed var(--border-card);border-radius:var(--radius-xl)">
+            <div style="font-size:32px;margin-bottom:8px">📊</div>
+            <div style="color:var(--text-muted)">More charts and advanced analytics in Phase 6</div>
+          </div>
+
+        </div>
+
+      </div><!-- /admin-content -->
+    </div><!-- /admin-main -->
+
+  </div><!-- /admin-layout -->
+
+
+
+  <!-- Toast Container -->
+  <div id="toast-container" aria-live="polite"></div>
+
+  <!-- Scripts -->
+  <script src="js/data.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/admin.js"></script>
+  <script>
+    // Show sidebar toggle on mobile
+    if (window.innerWidth <= 768) {
+      const toggle = document.getElementById('sidebar-toggle');
+      if (toggle) toggle.style.display = 'flex';
+    }
+  </script>
+
+</body>
+</html>

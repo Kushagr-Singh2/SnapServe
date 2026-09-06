@@ -1,0 +1,140 @@
+{
+  "accounts": [
+    {
+      "id": "98f80686478a",
+      "name": "kushagr",
+      "role": "customer",
+      "passwordHash": "c3fc69b866c4d77e80b076d461c6977a1357ac03eb71fb1e7b08207ce14fd544",
+      "createdAt": "2026-09-03T18:48:43.930Z"
+    },
+    {
+      "id": "16f084b85522",
+      "name": "shivendu",
+      "role": "worker",
+      "passwordHash": "87d5d2b97a9773c29b47cb8b248895bb1f4df29e7a52734dee0bdcb90c0363b3",
+      "createdAt": "2026-09-03T18:49:11.877Z"
+    },
+    {
+      "id": "a988749c3e16",
+      "name": "tarush",
+      "role": "admin",
+      "passwordHash": "452dd9c0246e8950d10da1c6236c50f60cbe4dfece944c0250c53121bf70fc2c",
+      "createdAt": "2026-09-03T18:50:15.761Z"
+    },
+    {
+      "id": "0b14621442fe",
+      "name": "Tarush",
+      "role": "worker",
+      "passwordHash": "6811c07f19ddbbc5798229e05759cce28b958a4dad678ce06ceaf0949ac359a5",
+      "createdAt": "2026-09-03T19:17:42.365Z"
+    },
+    {
+      "id": "b4593f001e39",
+      "name": "Kushagr",
+      "role": "admin",
+      "passwordHash": "6cee28fdcc7669529a7d820eaacd07fc9dc87c9a845de3fde3ede804cf01fb5b",
+      "createdAt": "2026-09-03T19:18:00.725Z"
+    }
+  ],
+  "workers": [
+    {
+      "id": "82c2730380b1",
+      "accountId": "16f084b85522",
+      "name": "shivendu",
+      "location": "Rohini delhi",
+      "experience": 3,
+      "bio": "electrician",
+      "services": [
+        {
+          "id": "69685fb9d54e",
+          "category": "Electrical",
+          "specificWork": "all General Electric related task",
+          "basePrice": 300,
+          "experienceYears": 3,
+          "description": "",
+          "addedAt": "2026-09-03T18:50:02.876Z"
+        }
+      ],
+      "verificationStatus": "approved",
+      "available": true,
+      "rating": null,
+      "totalJobs": 0,
+      "createdAt": "2026-09-03T18:49:39.807Z",
+      "updatedAt": "2026-09-03T18:50:02.876Z",
+      "verifiedAt": "2026-09-03T18:50:52.427Z",
+      "verifiedBy": "tarush"
+    },
+    {
+      "id": "6a8f708a59ac",
+      "accountId": "b4593f001e39",
+      "name": "Tarush",
+      "location": "Jaipur",
+      "experience": 3,
+      "bio": "plumbing",
+      "services": [
+        {
+          "id": "f9e9d32c1f12",
+          "category": "Plumbing",
+          "specificWork": "tap",
+          "basePrice": 300,
+          "experienceYears": 3,
+          "description": "",
+          "addedAt": "2026-09-03T19:18:45.405Z"
+        }
+      ],
+      "verificationStatus": "approved",
+      "available": true,
+      "rating": null,
+      "totalJobs": 0,
+      "createdAt": "2026-09-03T19:18:33.667Z",
+      "updatedAt": "2026-09-03T19:18:45.405Z",
+      "verifiedAt": "2026-09-03T19:19:19.776Z",
+      "verifiedBy": "Kushagr"
+    }
+  ],
+  "serviceRequests": [
+    {
+      "id": "6459184c854a",
+      "customerId": "16f084b85522",
+      "customerName": "shivendu",
+      "workerId": "82c2730380b1",
+      "serviceCategory": "Electrical",
+      "specificWork": "all General Electric related task",
+      "problem": "all General Electric related task",
+      "urgency": "Medium",
+      "basePrice": 300,
+      "offer": 300,
+      "message": "",
+      "status": "accepted",
+      "workerCounter": null,
+      "finalPrice": 300,
+      "jobStatus": "on_the_way",
+      "createdAt": "2026-09-03T18:52:08.247Z",
+      "updatedAt": "2026-09-03T18:53:37.807Z",
+      "lastMessage": "Job status updated to on_the_way"
+    },
+    {
+      "id": "03c259f46741",
+      "customerId": "b4593f001e39",
+      "customerName": "Kushagr",
+      "workerId": "6a8f708a59ac",
+      "serviceCategory": "Plumbing",
+      "specificWork": "tap",
+      "problem": "tap",
+      "urgency": "Medium",
+      "basePrice": 300,
+      "offer": 300,
+      "message": "",
+      "status": "completed",
+      "workerCounter": 314,
+      "finalPrice": 314,
+      "jobStatus": "completed",
+      "createdAt": "2026-09-03T19:20:04.584Z",
+      "updatedAt": "2026-09-03T19:21:03.164Z",
+      "lastMessage": "Job status updated to completed"
+    }
+  ],
+  "negotiations": [],
+  "bookings": [],
+  "messages": []
+}

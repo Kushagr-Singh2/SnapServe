@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SnapServe — SIH Hackathon Login</title>
+  <meta name="description" content="SnapServe SIH Hackathon Demo Login — Hyperlocal AI-Powered Home Services." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+
+  <style>
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at 50% 20%, rgba(255,107,0,0.15), transparent 70%),
+                  radial-gradient(circle at 80% 80%, rgba(232,184,75,0.1), transparent 60%),
+                  #0B0D12;
+      padding: 20px;
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 440px;
+      background: rgba(18, 22, 32, 0.85);
+      border: 1px solid rgba(255, 107, 0, 0.25);
+      border-radius: 28px;
+      padding: 36px 28px;
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(255,107,0,0.1);
+      animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .login-header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .login-logo-img {
+      height: 48px;
+      width: auto;
+      margin-bottom: 12px;
+      filter: drop-shadow(0 4px 12px rgba(255,107,0,0.4));
+    }
+
+    .login-title {
+      font-size: 24px;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 6px;
+      letter-spacing: -0.5px;
+    }
+
+    .login-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-input {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 14px;
+      padding: 14px 16px;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.2);
+      background: rgba(0, 0, 0, 0.6);
+    }
+
+    .role-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .role-card {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 14px 8px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+
+    .role-card:hover {
+      background: rgba(255, 107, 0, 0.08);
+      border-color: rgba(255, 107, 0, 0.3);
+    }
+
+    .role-card.active {
+      background: linear-gradient(135deg, rgba(255,107,0,0.25), rgba(232,184,75,0.15));
+      border-color: var(--primary);
+      box-shadow: 0 4px 16px rgba(255,107,0,0.25);
+    }
+
+    .role-icon {
+      font-size: 22px;
+      margin-bottom: 4px;
+      display: block;
+    }
+
+    .role-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .btn-login {
+      width: 100%;
+      padding: 16px;
+      border-radius: 16px;
+      font-size: 15px;
+      font-weight: 800;
+      background: var(--gradient-primary);
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(255,107,0,0.35);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-login:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(255,107,0,0.45);
+    }
+
+    .demo-hint {
+      margin-top: 18px;
+      padding: 10px;
+      background: rgba(255,255,255,0.03);
+      border: 1px dashed rgba(255,255,255,0.1);
+      border-radius: 12px;
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-card">
+    <div class="login-header">
+      <img src="logo.jpg" alt="SnapServe Logo" class="login-logo-img" />
+      <h1 class="login-title">Welcome to SnapServe</h1>
+      <p class="login-subtitle">Connecting you with verified local professionals.</p>
+    </div>
+
+    <form id="login-form" onsubmit="handleLogin(event)">
+      <div class="form-group">
+        <label class="form-label" for="login-name">Your Name</label>
+        <input type="text" id="login-name" class="form-input" placeholder="e.g. Kushagr / Arjun / Admin" required autocomplete="name" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="login-password">Password</label>
+        <input type="password" id="login-password" class="form-input" placeholder="Enter any password" required autocomplete="current-password" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Select Role</label>
+        <div class="role-grid">
+          <div class="role-card active" data-role="customer" onclick="selectRole('customer', this)">
+            <span class="role-icon">👤</span>
+            <span class="role-title">Customer</span>
+          </div>
+          <div class="role-card" data-role="worker" onclick="selectRole('worker', this)">
+            <span class="role-icon">🔧</span>
+            <span class="role-title">Service Worker</span>
+          </div>
+          <div class="role-card" data-role="admin" onclick="selectRole('admin', this)">
+            <span class="role-icon">🛡️</span>
+            <span class="role-title">Admin</span>
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" id="btn-login-submit" class="btn-login">
+        CONTINUE <i class="fa-solid fa-arrow-right"></i>
+      </button>
+    </form>
+
+    <div class="demo-hint">
+      ⚡ <strong>Hyperlocal Home Services Platform:</strong> Enter any name and password to join. Real accounts populate the demo ecosystem.
+    </div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    let selectedRole = 'customer';
+
+    function selectRole(role, cardEl) {
+      selectedRole = role;
+      document.querySelectorAll('.role-card').forEach(c => c.classList.remove('active'));
+      cardEl.classList.add('active');
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const nameInput = document.getElementById('login-name').value.trim();
+      const passwordInput = document.getElementById('login-password').value;
+      const submitBtn = document.getElementById('btn-login-submit');
+
+      if (!nameInput) {
+        alert('Please enter your name');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Connecting...`;
+
+      try {
+        const account = await API.login(nameInput, passwordInput, selectedRole);
+        const sessionData = {
+          id: account.id,
+          name: account.name,
+          role: account.role,
+          createdAt: account.createdAt,
+          loginTime: Date.now()
+        };
+
+        Session.set(sessionData);
+        StateManager.setRole(account.role);
+
+        const targetMap = {
+          customer: 'user.html',
+          user: 'user.html',
+          worker: 'worker.html',
+          admin: 'admin.html'
+        };
+
+        window.location.href = targetMap[account.role] || 'user.html';
+      } catch (err) {
+        console.error('Login error:', err);
+        // Fallback for offline/local standalone mode
+        const sessionData = {
+          id: 'acc_' + Date.now().toString(36),
+          name: nameInput,
+          role: selectedRole,
+          loginTime: Date.now()
+        };
+        Session.set(sessionData);
+        StateManager.setRole(selectedRole);
+        const targetMap = {
+          customer: 'user.html',
+          user: 'user.html',
+          worker: 'worker.html',
+          admin: 'admin.html'
+        };
+        window.location.href = targetMap[selectedRole] || 'user.html';
+      }
+    }
+  </script>
+</body>
+</html>

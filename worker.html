@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SnapServe — Worker Dashboard</title>
+  <meta name="description" content="SnapServe worker interface. Manage your availability, accept jobs, and negotiate prices." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/worker.css" />
+</head>
+<body>
+
+  <!-- Subtle BG -->
+  <div class="bg-animated" aria-hidden="true" style="opacity:0.06">
+    <div class="bg-orb bg-orb-1" style="width:350px;height:350px;background:var(--success);top:-100px;right:-100px;"></div>
+    <div class="bg-orb" style="width:250px;height:250px;background:var(--primary);bottom:100px;left:-60px;filter:blur(100px);animation:orbFloat 14s ease-in-out -6s infinite;"></div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       WORKER APP SHELL
+  ══════════════════════════════════════════════════════════ -->
+  <div class="worker-app page-wrapper" id="worker-app">
+
+    <!-- ══ DESKTOP SIDEBAR (hidden on mobile) ═══════════════ -->
+    <aside class="worker-desktop-sidebar" id="worker-desktop-sidebar" aria-label="Worker navigation">
+
+      <!-- Logo + back link -->
+      <div class="sidebar-logo-area">
+        <a href="index.html" aria-label="Back to home">
+          <img src="logo.jpg" alt="SnapServe" class="sidebar-logo-img" />
+        </a>
+        <span class="badge badge-success" style="font-size:10px">Worker</span>
+      </div>
+
+      <!-- Worker Profile Card -->
+      <div class="sidebar-worker-profile" id="sidebar-worker-profile">
+        <div class="sidebar-worker-avatar" id="sidebar-worker-avatar">W</div>
+        <div class="sidebar-worker-name"   id="sidebar-worker-name">Loading...</div>
+        <div class="sidebar-worker-role"   id="sidebar-worker-role">Service Worker</div>
+        <div class="sidebar-worker-rating" id="sidebar-worker-rating">🟡 Pending</div>
+      </div>
+
+      <!-- Online / Offline Button -->
+      <div class="sidebar-online-btn-wrap">
+        <button class="online-btn online" id="sidebar-online-btn" aria-label="Toggle online status" onclick="toggleOnlineStatus()">
+          <span class="status-indicator"></span>
+          <span id="sidebar-online-label">Online</span>
+        </button>
+      </div>
+
+      <!-- Navigation -->
+      <nav class="sidebar-nav-section" aria-label="Worker navigation">
+        <span class="sidebar-nav-label">Navigation</span>
+
+        <button class="sidebar-nav-item active" data-view="dashboard" onclick="switchWorkerView('dashboard', this)">
+          <i class="fa-solid fa-gauge-high" style="width:16px;color:var(--primary)"></i>
+          Dashboard
+        </button>
+        <button class="sidebar-nav-item" data-view="requests" onclick="switchWorkerView('requests', this)">
+          <i class="fa-solid fa-inbox" style="width:16px"></i>
+          Requests
+          <span class="nav-count" id="sidebar-req-count">0</span>
+        </button>
+        <button class="sidebar-nav-item" data-view="messages" onclick="switchWorkerView('messages', this)">
+          <i class="fa-solid fa-comments" style="width:16px"></i>
+          Messages
+        </button>
+
+        <span class="sidebar-nav-label" style="margin-top:var(--space-sm)">Account</span>
+
+        <button class="sidebar-nav-item" data-view="profile" onclick="switchWorkerView('profile', this)">
+          <i class="fa-solid fa-user-circle" style="width:16px"></i>
+          My Profile
+        </button>
+        <button class="sidebar-nav-item" data-view="settings" onclick="switchWorkerView('settings', this)">
+          <i class="fa-solid fa-gear" style="width:16px"></i>
+          Settings
+        </button>
+      </nav>
+
+      <!-- Today's Earnings Strip -->
+      <div class="sidebar-earnings-strip" id="sidebar-earnings">
+        <div>
+          <div class="sidebar-earn-val" id="sidebar-earn-val">₹0</div>
+          <div class="sidebar-earn-lbl">Today's Earn</div>
+        </div>
+        <div>
+          <div class="sidebar-earn-val" id="sidebar-jobs-val">0</div>
+          <div class="sidebar-earn-lbl">Jobs Done</div>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- ══ DESKTOP MAIN WRAPPER ══════════════════════════════ -->
+    <div class="worker-desktop-main" id="worker-desktop-main">
+
+      <!-- Desktop Topbar (hidden on mobile) -->
+      <header class="worker-desktop-topbar" id="worker-desktop-topbar" role="banner">
+        <div>
+          <div class="desktop-topbar-title" id="dt-title">Dashboard</div>
+          <div class="desktop-topbar-sub" id="dt-sub">Today's overview</div>
+        </div>
+        <div class="desktop-topbar-right">
+          <button class="btn-icon" aria-label="Notifications" style="font-size:14px">
+            <i class="fa-regular fa-bell"></i>
+          </button>
+          <div class="avatar" style="background:var(--gradient-primary);cursor:pointer" id="dt-avatar">W</div>
+        </div>
+      </header>
+
+      <!-- Mobile Header (hidden on desktop) -->
+      <header class="worker-mobile-header" role="banner">
+        <div class="worker-header-left">
+          <div class="worker-greeting" id="worker-greeting">Good morning,</div>
+          <div class="worker-name"     id="worker-name">Loading...</div>
+          <div class="worker-role-tag" id="worker-role-tag">Specialist</div>
+        </div>
+        <!-- Online/Offline button (mobile) -->
+        <button class="online-btn online" id="mobile-online-btn" aria-label="Toggle availability" onclick="toggleOnlineStatus()">
+          <span class="status-indicator"></span>
+          <span id="mobile-online-label">Online</span>
+        </button>
+      </header>
+
+      <!-- ══ MAIN SCROLL BODY ══════════════════════════════ -->
+      <main class="worker-scroll" id="main-content" role="main">
+
+        <!-- ── DESKTOP WELCOME (desktop only) ─────────────── -->
+        <div class="desktop-welcome" id="desktop-welcome">
+          <div class="desktop-welcome-greeting" id="dw-greeting">Good morning,</div>
+          <div class="desktop-welcome-name"     id="dw-name">Loading...</div>
+          <div class="desktop-welcome-tag"      id="dw-tag">📍 Operational Workspace</div>
+        </div>
+
+        <!-- ── LEFT / MAIN COLUMN ─────────────────────────── -->
+        <div class="worker-main-col" id="worker-main-col">
+
+          <!-- Worker Onboarding Card (Shown if profile not yet created) -->
+          <div id="worker-onboarding-card" style="display:none;padding:28px;background:var(--bg-glass);border:1px solid rgba(255,107,0,0.4);border-radius:24px;margin-bottom:24px;backdrop-filter:blur(16px)">
+            <div style="text-align:center;margin-bottom:20px">
+              <div style="font-size:36px;margin-bottom:8px">🔧</div>
+              <h2 style="font-size:22px;font-weight:800;color:#fff;margin-bottom:4px">Worker Profile Setup</h2>
+              <p style="font-size:13px;color:var(--text-muted)">Set up your profile to add services and submit for admin verification.</p>
+            </div>
+            <form id="worker-onboarding-form" onsubmit="handleWorkerOnboarding(event)">
+              <div style="margin-bottom:14px">
+                <label style="font-size:12px;font-weight:700;color:var(--text-secondary);display:block;margin-bottom:6px">1. Full Name</label>
+                <input type="text" id="ob-worker-name" required placeholder="e.g. Arjun" style="width:100%;background:rgba(0,0,0,0.4);border:1px solid rgba(255,107,0,0.3);border-radius:12px;padding:12px 14px;color:#fff;font-weight:700" />
+              </div>
+              <div style="margin-bottom:14px">
+                <label style="font-size:12px;font-weight:700;color:var(--text-secondary);display:block;margin-bottom:6px">2. Location / Area</label>
+                <input type="text" id="ob-worker-location" required placeholder="e.g. Connaught Place, New Delhi" style="width:100%;background:rgba(0,0,0,0.4);border:1px solid rgba(255,107,0,0.3);border-radius:12px;padding:12px 14px;color:#fff" />
+              </div>
+              <div style="margin-bottom:14px">
+                <label style="font-size:12px;font-weight:700;color:var(--text-secondary);display:block;margin-bottom:6px">3. Years of Experience</label>
+                <input type="number" id="ob-worker-exp" min="0" max="50" value="3" required style="width:100%;background:rgba(0,0,0,0.4);border:1px solid rgba(255,107,0,0.3);border-radius:12px;padding:12px 14px;color:#fff;font-weight:700" />
+              </div>
+              <div style="margin-bottom:18px">
+                <label style="font-size:12px;font-weight:700;color:var(--text-secondary);display:block;margin-bottom:6px">4. Short Description about yourself</label>
+                <textarea id="ob-worker-bio" rows="3" required placeholder="Tell customers about your skills, reliability, and work quality..." style="width:100%;background:rgba(0,0,0,0.4);border:1px solid rgba(255,107,0,0.3);border-radius:12px;padding:12px 14px;color:#fff;font-size:13px;resize:none"></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary btn-full" style="padding:14px;font-size:14px;font-weight:800">
+                Complete Profile & Add Services →
+              </button>
+            </form>
+          </div>
+
+          <!-- Dashboard Tab Content -->
+          <div data-worker-tab="dashboard" id="worker-dashboard-content">
+
+            <!-- Stats -->
+            <section aria-label="Today's statistics">
+              <div class="section-header">
+                <h2 class="section-title" id="stats-heading">Today</h2>
+                <span class="badge badge-success" style="font-size:10px">
+                  <span style="width:5px;height:5px;background:var(--success);border-radius:50%;display:inline-block;animation:onlinePulse 2s infinite;margin-right:3px"></span>
+                  Live
+                </span>
+              </div>
+              <div class="stats-grid">
+                <div class="stat-card">
+                  <div class="stat-icon">💰</div>
+                  <div class="stat-value" id="stat-earnings">₹0</div>
+                  <div class="stat-label">Earnings</div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-icon">✅</div>
+                  <div class="stat-value" id="stat-jobs">0</div>
+                  <div class="stat-label">Completed</div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-icon">📬</div>
+                  <div class="stat-value" id="stat-pending">0</div>
+                  <div class="stat-label">Pending</div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Demand Banner -->
+            <div id="demand-banner" class="demand-banner" aria-live="polite">
+              <!-- Rendered by worker.js -->
+            </div>
+
+            <!-- Incoming Requests -->
+            <section aria-labelledby="requests-heading">
+              <div class="section-header">
+                <h2 class="section-title" id="requests-heading">Incoming Requests</h2>
+                <span class="badge badge-primary" id="req-count-badge">Loading...</span>
+              </div>
+              <div id="requests-container" role="list" aria-label="Incoming job requests">
+                <div class="skeleton" style="height:180px;border-radius:20px;margin-bottom:12px"></div>
+              </div>
+            </section>
+
+          </div><!-- /dashboard tab -->
+
+          <!-- Requests Tab -->
+          <div data-worker-tab="requests" style="display:none">
+            <div class="section-header" style="margin-bottom:var(--space-lg)">
+              <h2 class="section-title">All Requests & Job History</h2>
+            </div>
+            <div id="requests-tab-container">
+              <!-- Dynamically populated by worker.js -->
+            </div>
+          </div>
+
+          <!-- Messages Tab -->
+          <div data-worker-tab="messages" style="display:none">
+            <div class="section-header" style="margin-bottom:var(--space-lg)">
+              <h2 class="section-title">Customer Chat & Negotiation History</h2>
+            </div>
+            <div id="messages-tab-container">
+              <!-- Dynamically populated by worker.js -->
+            </div>
+          </div>
+
+          <!-- Profile Tab -->
+          <div data-worker-tab="profile" style="display:none">
+            <div class="section-header" style="margin-bottom:var(--space-lg)">
+              <h2 class="section-title">My Profile</h2>
+              <button class="btn btn-ghost btn-sm" onclick="openEditProfileModal()">
+                <i class="fa-solid fa-pen"></i> Edit Profile
+              </button>
+            </div>
+            <div id="worker-profile-content">
+              <!-- Rendered by worker.js -->
+              <div class="skeleton" style="height:200px;border-radius:20px;margin-bottom:12px"></div>
+            </div>
+
+            <div class="section-header" style="margin-top:var(--space-lg)">
+              <h2 class="section-title" style="font-size:var(--text-base)">My Offered Services</h2>
+              <button class="btn btn-ghost btn-sm" onclick="openAddServiceModal()">
+                <i class="fa-solid fa-plus"></i> Add Service
+              </button>
+            </div>
+            <div id="my-services-list" role="list" aria-label="My offered services">
+              <div class="skeleton" style="height:80px;border-radius:16px;margin-bottom:8px"></div>
+              <div class="skeleton" style="height:80px;border-radius:16px;margin-bottom:8px"></div>
+            </div>
+          </div>
+
+          <!-- Settings Tab -->
+          <div data-worker-tab="settings" style="display:none">
+            <div class="section-header" style="margin-bottom:var(--space-lg)">
+              <h2 class="section-title">Worker Preferences & Settings</h2>
+            </div>
+            <div style="background:var(--bg-glass);border:1px solid var(--border-card);border-radius:20px;padding:20px;backdrop-filter:blur(16px)">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border-subtle)">
+                <div>
+                  <div style="font-weight:700;color:#fff;font-size:14px">🔔 Instant Job Notifications</div>
+                  <div style="font-size:11px;color:var(--text-muted)">Receive sound alert when a customer offers a nearby job</div>
+                </div>
+                <input type="checkbox" checked style="accent-color:var(--primary);width:18px;height:18px" />
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border-subtle)">
+                <div>
+                  <div style="font-weight:700;color:#fff;font-size:14px">📍 Auto Location Sharing</div>
+                  <div style="font-size:11px;color:var(--text-muted)">Show live distance to booking customers</div>
+                </div>
+                <input type="checkbox" checked style="accent-color:var(--primary);width:18px;height:18px" />
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0">
+                <div>
+                  <div style="font-weight:700;color:#fff;font-size:14px">🗣️ Multi-lingual AI Audio Alerts</div>
+                  <div style="font-size:11px;color:var(--text-muted)">Speak incoming request details in Hindi/English</div>
+                </div>
+                <input type="checkbox" checked style="accent-color:var(--primary);width:18px;height:18px" />
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /worker-main-col -->
+
+        <!-- ── RIGHT SIDE COLUMN (desktop only) ─────────────── -->
+        <aside class="worker-side-col" id="worker-side-col" aria-label="Activity panel">
+
+          <div class="side-col-title">Quick Info</div>
+
+          <!-- Area Demand card -->
+          <div class="quick-tip-card" id="side-demand-card">
+            <span class="quick-tip-icon">📍</span>
+            <div class="quick-tip-title">High Demand Nearby</div>
+            <div>Plumbing requests are up 40% in your area right now. Stay online to capture more jobs.</div>
+          </div>
+
+          <!-- Earnings overview -->
+          <div style="background:var(--bg-glass);border:1px solid var(--border-card);border-radius:var(--radius-xl);padding:var(--space-lg);backdrop-filter:blur(16px)">
+            <div class="side-col-title" style="border:none;margin:0 0 var(--space-md);padding:0">This Week</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-sm)">
+              <div style="text-align:center;padding:var(--space-md);background:rgba(255,107,0,0.07);border:1px solid rgba(255,107,0,0.12);border-radius:var(--radius-md)">
+                <div style="font-size:var(--text-xl);font-weight:800;color:var(--primary-light)" id="week-earn">₹0</div>
+                <div style="font-size:10px;color:var(--text-muted)">Earned</div>
+              </div>
+              <div style="text-align:center;padding:var(--space-md);background:rgba(34,197,94,0.07);border:1px solid rgba(34,197,94,0.12);border-radius:var(--radius-md)">
+                <div style="font-size:var(--text-xl);font-weight:800;color:var(--success)" id="week-jobs">0</div>
+                <div style="font-size:10px;color:var(--text-muted)">Jobs Done</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tips -->
+          <div class="quick-tip-card">
+            <span class="quick-tip-icon">💡</span>
+            <div class="quick-tip-title">Pro Tip</div>
+            <div>Workers who respond within 2 minutes get 3x more job acceptances.</div>
+          </div>
+
+        </aside>
+
+      </main><!-- /worker-scroll -->
+
+    </div><!-- /worker-desktop-main -->
+
+    <!-- ══ MOBILE BOTTOM NAV ══════════════════════════════════ -->
+    <nav class="worker-bottom-nav" role="navigation" aria-label="Worker navigation">
+
+      <button class="nav-item active" data-view="dashboard" onclick="switchWorkerTab('dashboard', this)" aria-label="Dashboard">
+        <span class="nav-icon">🏠</span>
+        <span class="nav-label">Dashboard</span>
+      </button>
+
+      <button class="nav-item" data-view="requests" onclick="switchWorkerTab('requests', this)" aria-label="Requests">
+        <span class="nav-icon">📋</span>
+        <span class="nav-label">Requests</span>
+      </button>
+
+      <button class="nav-item" data-view="messages" onclick="switchWorkerTab('messages', this)" aria-label="Messages">
+        <span class="nav-icon">💬</span>
+        <span class="nav-label">Messages</span>
+      </button>
+
+      <button class="nav-item" data-view="profile" onclick="switchWorkerTab('profile', this)" aria-label="Profile">
+        <span class="nav-icon">👤</span>
+        <span class="nav-label">Profile</span>
+      </button>
+
+    </nav>
+
+  </div><!-- /worker-app -->
+
+  <!-- Toast -->
+  <div id="toast-container" aria-live="polite"></div>
+
+  <!-- Scripts -->
+  <script src="js/data.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/worker.js"></script>
+
+  <!-- ══════════════════════════════════════════════════════
+       ADD SERVICE MODAL
+  ══════════════════════════════════════════════════════ -->
+  <div class="modal-backdrop" id="add-service-modal" role="dialog" aria-modal="true" aria-label="Add Service">
+    <div class="modal-inner" style="max-width:440px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-md);padding-bottom:10px;border-bottom:1px solid var(--border-subtle)">
+        <div style="font-weight:800;font-size:var(--text-lg);color:var(--text-primary)">➕ Add New Service</div>
+        <button class="btn-icon" onclick="closeModal('add-service-modal')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div style="margin-bottom:12px">
+        <label style="font-size:12px;font-weight:700;color:var(--text-secondary);display:block;margin-bottom:4px">Service Category</label>
+        <select id="new-svc-category" style="width:100%;background:rgba(0,0,0,0.4);border:1px solid rgba(255,107,0,0.3);border-radius:10px;padding:10px;color:#fff;font-size:13px">
+          <option value="Electrical">⚡ Electrical</option>
+          <option value="Plumbing">💧 Plumbing</option>
+          <option value="AC & Appliance Repair">❄️ AC & Appliance Repair</option>
+          <option value="Carpentry">🔨 Carpentry</option>
+          <option value="Cleaning">🧹 Cleaning</option>
+          <option value="Painting">🖌️ Painting</option>
+          <option value="Pest Control">🐛 Pest Control</option>
+          <option value="Other">🔧 Other</option>
+        </select>
+      </div>
+
+      <div style="margin-bottom:12px">
+        <label style="font-size:12px;font-weight:700;color:var(--text-secondary);display:block;margin-bottom:4px">What exact work do you provide?</label>
+        <input type="text" id="new-svc-work" placeholder="e.g. Fan installation and switchboard repair" required style="width:100%;background:rgba(0,0,0,0.4);border:1px solid rgba(255,107,0,0.3);border-radius:10px;padding:10px;color:#fff;font-size:13px;font-weight:600" />
+      </div>
+
+      <div style="margin-bottom:12px">
+        <label style="font-size:12px;font-weight:700;color:var(--text-secondary);display:block;margin-bottom:4px">Base Starting Price (₹)</label>
+        <input type="number" id="new-svc-price" value="300" style="width:100%;background:rgba(0,0,0,0.4);border:1px solid rgba(255,107,0,0.3);border-radius:10px;padding:10px;color:#fff;font-weight:700;font-size:15px" />
+      </div>
+
+      <div style="margin-bottom:12px">
+        <label style="font-size:12px;font-weight:700;color:var(--text-secondary);display:block;margin-bottom:4px">Experience (Years)</label>
+        <input type="number" id="new-svc-exp" value="3" style="width:100%;background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px;color:#fff;font-size:13px" />
+      </div>
+
+      <div style="margin-bottom:16px">
+        <label style="font-size:12px;font-weight:700;color:var(--text-secondary);display:block;margin-bottom:4px">Optional Description</label>
+        <textarea id="new-svc-desc" rows="2" placeholder="Provide extra details about your work..." style="width:100%;background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px;color:#fff;font-size:12px;resize:none"></textarea>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 2fr;gap:8px">
+        <button class="btn btn-ghost" onclick="closeModal('add-service-modal')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitAddService()">+ Submit Service</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════
+       EDIT SERVICE MODAL
+  ══════════════════════════════════════════════════════ -->
+  <div class="modal-backdrop" id="edit-service-modal" role="dialog" aria-modal="true" aria-label="Edit Service">
+    <div class="modal-inner" style="max-width:440px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-md);padding-bottom:10px;border-bottom:1px solid var(--border-subtle)">
+        <div style="font-weight:800;font-size:var(--text-lg);color:var(--text-primary)" id="edit-svc-title">✏️ Edit Service</div>
+        <button class="btn-icon" onclick="closeModal('edit-service-modal')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <input type="hidden" id="edit-svc-id" />
+
+      <div style="margin-bottom:12px">
+        <label style="font-size:12px;font-weight:700;color:var(--text-secondary);display:block;margin-bottom:4px">Base Price (₹)</label>
+        <input type="number" id="edit-svc-price" style="width:100%;background:rgba(0,0,0,0.4);border:1px solid rgba(255,107,0,0.3);border-radius:10px;padding:10px;color:#fff;font-weight:700;font-size:15px" />
+      </div>
+
+      <div style="margin-bottom:16px">
+        <label style="font-size:12px;font-weight:700;color:var(--text-secondary);display:block;margin-bottom:4px">Years Experience</label>
+        <input type="number" id="edit-svc-exp" style="width:100%;background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px;color:#fff;font-size:13px" />
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px">
+        <button class="btn btn-ghost" onclick="submitRemoveService()" style="color:var(--danger)">Remove</button>
+        <button class="btn btn-ghost" onclick="closeModal('edit-service-modal')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitSaveService()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════
+       EDIT WORKER PROFILE MODAL
+  ══════════════════════════════════════════════════════ -->
+  <div class="modal-backdrop" id="edit-profile-modal" role="dialog" aria-modal="true" aria-label="Edit Profile">
+    <div class="modal-inner" style="max-width:460px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-md);padding-bottom:10px;border-bottom:1px solid var(--border-subtle)">
+        <div style="font-weight:800;font-size:var(--text-lg);color:var(--text-primary)">👤 Edit Worker Profile</div>
+        <button class="btn-icon" onclick="closeModal('edit-profile-modal')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div style="margin-bottom:12px">
+        <label style="font-size:12px;font-weight:700;color:var(--text-secondary);display:block;margin-bottom:4px">Full Name</label>
+        <input type="text" id="edit-profile-name" style="width:100%;background:rgba(0,0,0,0.4);border:1px solid rgba(255,107,0,0.3);border-radius:10px;padding:10px;color:#fff;font-weight:700;font-size:14px" />
+      </div>
+
+      <div style="margin-bottom:12px">
+        <label style="font-size:12px;font-weight:700;color:var(--text-secondary);display:block;margin-bottom:4px">Phone Number</label>
+        <input type="text" id="edit-profile-phone" style="width:100%;background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px;color:#fff;font-size:13px" />
+      </div>
+
+      <div style="margin-bottom:12px">
+        <label style="font-size:12px;font-weight:700;color:var(--text-secondary);display:block;margin-bottom:4px">Experience (Years)</label>
+        <input type="number" id="edit-profile-exp" style="width:100%;background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px;color:#fff;font-size:13px" />
+      </div>
+
+      <div style="margin-bottom:16px">
+        <label style="font-size:12px;font-weight:700;color:var(--text-secondary);display:block;margin-bottom:4px">Bio / Specialization</label>
+        <textarea id="edit-profile-bio" rows="3" style="width:100%;background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px;color:#fff;font-size:12px;resize:none"></textarea>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 2fr;gap:8px">
+        <button class="btn btn-ghost" onclick="closeModal('edit-profile-modal')">Cancel</button>
+        <button class="btn btn-primary" onclick="submitSaveProfile()">Save Profile</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════
+       WORKER LIVE CUSTOMER CHAT MODAL
+  ══════════════════════════════════════════════════════ -->
+  <div class="modal-backdrop" id="worker-chat-modal" role="dialog" aria-modal="true" aria-label="Customer Chat">
+    <div class="modal-inner" style="max-width:480px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border-subtle)">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="avatar" style="width:36px;height:36px;font-size:13px;background:var(--gradient-primary)">KS</div>
+          <div>
+            <div style="font-weight:800;font-size:14px;color:#fff" id="chat-customer-name">Kushagr Sharma</div>
+            <div style="font-size:10px;color:var(--success)">🟢 Online · Customer</div>
+          </div>
+        </div>
+        <button class="btn-icon" onclick="closeModal('worker-chat-modal')"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div id="worker-chat-history-box" style="height:280px;overflow-y:auto;padding-right:4px;margin-bottom:12px">
+        <!-- Messages rendered by js/worker.js -->
+      </div>
+
+      <div style="display:flex;gap:8px">
+        <input type="text" id="worker-chat-input" placeholder="Type message to customer..."
+          style="flex:1;background:rgba(0,0,0,0.4);border:1px solid rgba(255,107,0,0.4);border-radius:12px;padding:10px 14px;color:#fff;font-size:13px"
+          onkeydown="if(event.key==='Enter') sendWorkerChatMessage()" />
+        <button class="btn btn-primary" style="padding:10px 16px" onclick="sendWorkerChatMessage()">
+          <i class="fa-solid fa-paper-plane"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" aria-live="polite"></div>
+
+  <!-- Scripts -->
+  <script src="js/data.js"></script>
+  <script src="js/main.js"></script>
+  <script src="js/worker.js"></script>
+
+</body>
+</html>
+
